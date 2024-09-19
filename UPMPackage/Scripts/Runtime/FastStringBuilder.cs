@@ -66,7 +66,7 @@ namespace RTLTMPro {
 
         public void SetValue(FastStringBuilder other) {
             EnsureCapacity(other.length, false);
-            Copy(other.array, array);
+            Copy(other.array, array, other.length);
             length = other.length;
         }
 
@@ -267,15 +267,15 @@ namespace RTLTMPro {
 
             if (keepValues) {
                 int[] newArray = new int[capacity];
-                Copy(array, newArray);
+                Copy(array, newArray, length);
                 array = newArray;
             } else {
                 array = new int[capacity];
             }
         }
 
-        private static void Copy(int[] src, int[] dst) {
-            for (int i = 0; i < src.Length; i++)
+        private static void Copy(int[] src, int[] dst ,int count) {
+            for (int i = 0; i < count; i++)
                 dst[i] = src[i];
         }
     }
