@@ -56,12 +56,6 @@ namespace RTLTMPro
                 if (isRtl[i] == ContextType.Default)
                 {
                     int ch = input.Get(i);
-                    if (MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch))
-                    {
-                        isRtl[i] = hasArabic ? ContextType.Arabic : ContextType.English;
-                        continue;
-                    }
-
                     #region Judgment character condition
                     
                     ContextType previousType = ContextType.Default;
@@ -109,6 +103,56 @@ namespace RTLTMPro
                         behindType = previousType;
                     }
                     #endregion
+                    if (MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch))
+                    {
+                        var mirrorCharacter = MirroredCharsMaper.MirroredCharsMap[(char)ch];
+                        if (mirrorCharacter > (char)ch)
+                        {
+                            for (int j = 1; j  < input.Length - i; j++)
+                            {
+                                if (input.Get(i+j) == mirrorCharacter)
+                                {
+                                    ContextType mirrorPreviousType = ContextType.Default;
+                                    ContextType mirrorBehindType = ContextType.Default;
+                                    for (int k = 1; k <= j-1; k++)
+                                    {
+                                        if (isRtl[i + j - k] != ContextType.Default)
+                                        {
+                                            mirrorPreviousType = isRtl[i + j - k];
+                                            break;
+                                        }
+                                    }
+                                    for (int k = 1; k + i + j< input.Length; k++)
+                                    {
+                                        if (isRtl[i + j + k] != ContextType.Default)
+                                        {
+                                            mirrorBehindType = isRtl[i + j + k];
+                                            break;
+                                        }
+                                    }
+                                    //if right character is rightest, case previous type only
+                                    if (i + j == input.Length - 1) behindType = mirrorPreviousType;
+                                    //if previous type is default, there is no letter in or front this mirror character
+                                    if (mirrorPreviousType == ContextType.Default) mirrorPreviousType = mirrorBehindType;
+                                    //if all type is default, all text is not letter
+                                    if (mirrorPreviousType == ContextType.Default)
+                                    {
+                                        isRtl[i] = ContextType.Arabic;
+                                        isRtl[i + j] = ContextType.Arabic;
+                                        break;
+                                    }
+                                    if (previousType == ContextType.English && behindType == ContextType.English &&
+                                        mirrorPreviousType == ContextType.English )
+                                    {
+                                        isRtl[i] = ContextType.English;
+                                        isRtl[i + j] = ContextType.English;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if(isRtl[i] != ContextType.Default) continue;
                     if (previousType == ContextType.Arabic || behindType == ContextType.Arabic)
                         isRtl[i] = ContextType.Arabic;
                     if (previousType == ContextType.English && behindType == ContextType.English)

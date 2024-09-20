@@ -124,7 +124,8 @@ namespace RTLTMPro
                 #region process with Punctutaion and Symbol || Mirrored Chars
                 if (Char32Utils.IsPunctuation(characterAtThisIndex) || Char32Utils.IsSymbol(characterAtThisIndex)|| characterAtThisIndex == ' ')
                 {
-                    if (MirroredCharsSet.Contains((char)characterAtThisIndex))
+                    var characterType = inputCharacterType[i];
+                    if (MirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.Arabic)
                     {
                         characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
                         FlushBufferToOutput(LtrTextHolder, output);
@@ -132,7 +133,7 @@ namespace RTLTMPro
                         continue;
                     }
                     //fixed: refer to inputCharacterTpye to process Character
-                    var characterType = inputCharacterType[i];
+                    
                     if (characterType == ContextType.Arabic)
                     {
                         FlushBufferToOutput(LtrTextHolder, output);
