@@ -54,8 +54,8 @@ namespace RTLTMPro {
           ContextType behindType = ContextType.Default;
           // White Space didn't affect text composing in current logic
           // reserve for farther logic optimization
-          // bool previousWhiteSpace = false;
-          // bool behindWhiteSpace = false;
+          bool previousWhiteSpace = false;
+          bool behindWhiteSpace = false;
 
           // search backward for Context.Type
           // maybe a failed searching 
@@ -65,7 +65,7 @@ namespace RTLTMPro {
 
               break;
             } else if (input.Get(i - j) == ' ') {
-              // previousWhiteSpace = true;
+              previousWhiteSpace = true;
             }
           }
 
@@ -76,7 +76,7 @@ namespace RTLTMPro {
               behindType = isRtl[i + j];
               break;
             } else if (input.Get(i + j) == ' ') {
-              // behindWhiteSpace = true;
+              behindWhiteSpace = true;
             }
           }
 
@@ -87,6 +87,8 @@ namespace RTLTMPro {
           }
 
           #endregion
+
+          #region Mark Mirrored Character
 
           if (MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch)) {
             var mirrorCharacter = MirroredCharsMaper.MirroredCharsMap[(char)ch];
@@ -131,11 +133,39 @@ namespace RTLTMPro {
             }
           }
 
+          #endregion
+
+          #region Mark Normal Punctuation character and symbol character
+
           if (isRtl[i] != ContextType.Default) continue;
-          if (previousType == ContextType.Arabic || behindType == ContextType.Arabic)
-            isRtl[i] = ContextType.Arabic;
-          if (previousType == ContextType.English && behindType == ContextType.English)
+          if (previousType == ContextType.English && behindType == ContextType.English) {
             isRtl[i] = ContextType.English;
+            continue;
+          }
+
+          if (previousType == ContextType.Arabic && behindType == ContextType.Arabic) {
+            isRtl[i] = ContextType.Arabic;
+            continue;
+          }
+          // in order to clearly see the judgment logic, ignore the grammar prompts here
+          if (previousWhiteSpace == false && behindWhiteSpace == true) {
+            isRtl[i] = previousType;
+            continue;
+          }
+          // in order to clearly see the judgment logic, ignore the grammar prompts here
+          if (previousWhiteSpace == true && behindWhiteSpace == false) {
+            isRtl[i] = behindType;
+            continue;
+          }
+          // in order to clearly see the judgment logic, ignore the grammar prompts here
+          if (previousWhiteSpace == false && behindWhiteSpace == false) {
+            isRtl[i] = ContextType.Arabic;
+          }
+          // in order to clearly see the judgment logic, ignore the grammar prompts here
+          if (previousWhiteSpace == true && behindWhiteSpace == true) {
+            isRtl[i] = ContextType.Arabic;
+          }
+          #endregion
         }
       }
 
