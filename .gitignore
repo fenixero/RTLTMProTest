@@ -9,6 +9,7 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Mm]emoryCaptures/
+/UPMPackage/Tests/Comparion/
 
 # Never ignore Asset meta data
 !/[Aa]ssets/**/*.meta
@@ -61,3 +62,4 @@ crashlytics-build.properties
 
 # Raw image files
 *.xcf
+
