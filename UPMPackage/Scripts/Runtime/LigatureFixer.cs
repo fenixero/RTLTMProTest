@@ -10,12 +10,12 @@ using UnityEngine;
 
 namespace RTLTMPro {
   public static class LigatureFixer {
-    private static readonly List<int> LtrTextHolder = new List<int>(512);
-    private static readonly List<int> TagTextHolder = new List<int>(512);
+    private static readonly List<int> _ltrTextHolder = new List<int>(512);
+    private static readonly List<int> _tagTextHolder = new List<int>(512);
 
 
     private static readonly HashSet<char>
-      MirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
+      _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
 
     private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
@@ -32,17 +32,11 @@ namespace RTLTMPro {
       bool preserveNumbers) {
       // Some texts like tags, English words and numbers need to be displayed in their original order.
       // This list keeps the characters that their order should be reserved and streams reserved texts into final letters.
-      LtrTextHolder.Clear();
-      TagTextHolder.Clear();
-      // import other convert function to convert character to isolate type
-      // for(int i = 0 ; i < input.Length;i++)
-      // {
-      //     input.Set(i,ArabicTable.ArabicMapper.Convert(input.Get(i)));
-      // }
+      _ltrTextHolder.Clear();
+      _tagTextHolder.Clear();
       var (inputCharacterType, inputType) = MixedTypographer.CharactersTypeDetermination(input);
       // Tips:
       // Process is invert order, so the export text is invert in default
-
       for (int i = input.Length - 1; i >= 0; i--) {
         bool isInMiddle = i > 0 && i < input.Length - 1;
         bool isAtBeginning = i == 0;
@@ -71,12 +65,12 @@ namespace RTLTMPro {
             // Tag content's final sequence is same with arabic text
             // in this whole Process,Tag content will be revert sequence in last unit
             // so in this unit,Tag content's sequence is same with English
-            TagTextHolder.Add(characterAtThisIndex);
+            _tagTextHolder.Add(characterAtThisIndex);
 
             for (int j = i - 1; j >= 0; j--) {
               var jChar = input.Get(j);
 
-              TagTextHolder.Add(jChar);
+              _tagTextHolder.Add(jChar);
 
               if (jChar == '<') {
                 // TODO: Tag Valid judgment is to simple
@@ -92,7 +86,7 @@ namespace RTLTMPro {
                 break;
               }
             }
-
+            
             if (isValidTag) {
               // if a Tag is find and the Tag content is valid.
               // fixer going to a new split.
@@ -102,12 +96,12 @@ namespace RTLTMPro {
               // fixer continue work in old split
               // Bug: if tag is between two English text
               // this tag push process shuffle English text 
-              FlushBufferToOutput(LtrTextHolder, output);
-              FlushBufferToOutput(TagTextHolder, output);
+              FlushBufferToOutput(_ltrTextHolder, output);
+              FlushBufferToOutput(_tagTextHolder, output);
               i = nextI;
               continue;
             } else {
-              TagTextHolder.Clear();
+              _tagTextHolder.Clear();
             }
           }
         }
@@ -118,23 +112,23 @@ namespace RTLTMPro {
 
         if (Char32Utils.IsPunctuation(characterAtThisIndex) || Char32Utils.IsSymbol(characterAtThisIndex) ||
             characterAtThisIndex == ' ') {
-          var characterType = inputCharacterType[i];
-          if (MirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.RightToLeft) {
+          ContextType characterType = inputCharacterType[i];
+          if (_mirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.RightToLeft) {
             characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
-            FlushBufferToOutput(LtrTextHolder, output);
+            FlushBufferToOutput(_ltrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
           // fixed: refer to inputCharacterTpye to process Character
 
           if (characterType == ContextType.RightToLeft) {
-            FlushBufferToOutput(LtrTextHolder, output);
+            FlushBufferToOutput(_ltrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
 
           if (characterType == ContextType.LeftToRight) {
-            LtrTextHolder.Add(characterAtThisIndex);
+            _ltrTextHolder.Add(characterAtThisIndex);
             continue;
           }
 
@@ -142,11 +136,11 @@ namespace RTLTMPro {
             Debug.LogError($"Error Character Type Process,index:{i},Text:{input}," +
                            $"Text char array:{input.ToString().ToCharArray()}");
             if (inputType == ContextType.RightToLeft) {
-              FlushBufferToOutput(LtrTextHolder, output);
+              FlushBufferToOutput(_ltrTextHolder, output);
               output.Append(characterAtThisIndex);
               continue;
             } else {
-              LtrTextHolder.Add(characterAtThisIndex);
+              _ltrTextHolder.Add(characterAtThisIndex);
               continue;
             }
           }
@@ -167,14 +161,14 @@ namespace RTLTMPro {
           if (characterAtThisIndex == ' ' &&
               (isBeforeEnglishChar || isBeforeNumber || isBeforeSymbol) &&
               (isAfterEnglishChar || isAfterNumber || isAfterSymbol)) {
-            LtrTextHolder.Add(characterAtThisIndex);
+            _ltrTextHolder.Add(characterAtThisIndex);
             continue;
           }
         }
 
         if (Char32Utils.IsLetter(characterAtThisIndex) && !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
             Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi)) {
-          LtrTextHolder.Add(characterAtThisIndex);
+          _ltrTextHolder.Add(characterAtThisIndex);
           continue;
         }
 
@@ -182,11 +176,11 @@ namespace RTLTMPro {
         if (characterAtThisIndex >= (char)0xD800 &&
             characterAtThisIndex <= (char)0xDBFF ||
             characterAtThisIndex >= (char)0xDC00 && characterAtThisIndex <= (char)0xDFFF) {
-          LtrTextHolder.Add(characterAtThisIndex);
+          _ltrTextHolder.Add(characterAtThisIndex);
           continue;
         }
 
-        FlushBufferToOutput(LtrTextHolder, output);
+        FlushBufferToOutput(_ltrTextHolder, output);
 
         if (characterAtThisIndex != 0xFFFF &&
             characterAtThisIndex != (int)SpecialCharacters.ZeroWidthNoJoiner) {
@@ -194,7 +188,7 @@ namespace RTLTMPro {
         }
       }
 
-      FlushBufferToOutput(LtrTextHolder, output);
+      FlushBufferToOutput(_ltrTextHolder, output);
     }
   }
 }
