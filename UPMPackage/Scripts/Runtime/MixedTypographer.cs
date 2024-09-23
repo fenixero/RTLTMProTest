@@ -5,10 +5,11 @@ using System.Linq;
 
 namespace RTLTMPro {
   public class MixedTypographer {
-    public static (ContextType[], ContextType) CharactersTypeDetermination(FastStringBuilder input) {
+    public static (ContextType[], ContextType) CharactersTypeDetermination
+        (FastStringBuilder input) {
       bool hasRightToLeft = false;
       bool hasLeftToRight = false;
-      ContextType[] isRtl = new ContextType[input.Length];
+      var isRtl = new ContextType[input.Length];
 
       #region Mark RTL character
 
@@ -41,9 +42,10 @@ namespace RTLTMPro {
 
       #endregion
 
-      // if no RightToLeft and LeftToRight character is find, set to LeftToRight
+      // If no RightToLeft and LeftToRight character is found, set to LeftToRight
       if (!hasRightToLeft && !hasLeftToRight)
-        return (Enumerable.Repeat(ContextType.LeftToRight, input.Length).ToArray(), ContextType.LeftToRight);
+        return (Enumerable.Repeat(ContextType.LeftToRight, input.Length).ToArray(), 
+            ContextType.LeftToRight);
 
       #region Mark Punctuation character and symbol character
 
@@ -117,22 +119,26 @@ namespace RTLTMPro {
                     }
                   }
 
-                  // If the current character is the last in the input, only consider the previous type.
+                  // If the current character is the last in the input,
+                  // only consider the previous type.
                   if (i + j == input.Length - 1) {
                     mirrorBehindType = mirrorPreviousType;
                   }
-                  // If the previous type is default, assume no letter exists before this character.
+                  // If the previous type is default,
+                  // assume no letter exists before this character.
                   if (mirrorPreviousType == ContextType.Default) {
                     mirrorPreviousType = mirrorBehindType;
                   }
-                  // If both previous and next types are default, assume the text contains no letters.
+                  // If both previous and next types are default,
+                  // assume the text contains no letters.
                   if (mirrorPreviousType == ContextType.Default) {
                     isRtl[i] = ContextType.RightToLeft;
                     isRtl[i + j] = ContextType.RightToLeft;
                     break;
                   }
 
-                  if (previousType == ContextType.LeftToRight && behindType == ContextType.LeftToRight &&
+                  if (previousType == ContextType.LeftToRight 
+                      && behindType == ContextType.LeftToRight &&
                       mirrorPreviousType == ContextType.LeftToRight) {
                     isRtl[i] = ContextType.LeftToRight;
                     isRtl[i + j] = ContextType.LeftToRight;
@@ -169,7 +175,8 @@ namespace RTLTMPro {
                 // If right character is rightest, case previous type only
                 if (i + j == input.Length - 1) pairedBehindType = pairedPreviousType;
                 // If previous type is default, there is no letter in or front this mirror character
-                if (pairedPreviousType == ContextType.Default) pairedPreviousType = pairedBehindType;
+                if (pairedPreviousType == ContextType.Default) pairedPreviousType 
+                    = pairedBehindType;
                 // If all type is default, all text is not letter
                 if (pairedPreviousType == ContextType.Default) {
                   isRtl[i] = ContextType.RightToLeft;
@@ -177,8 +184,8 @@ namespace RTLTMPro {
                   break;
                 }
 
-                if (previousType == ContextType.LeftToRight && behindType == ContextType.LeftToRight &&
-                    pairedPreviousType == ContextType.LeftToRight) {
+                if (previousType == ContextType.LeftToRight && behindType == 
+                    ContextType.LeftToRight && pairedPreviousType == ContextType.LeftToRight) {
                   isRtl[i] = ContextType.LeftToRight;
                   isRtl[i + j] = ContextType.LeftToRight;
                   break;

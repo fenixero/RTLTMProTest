@@ -1,5 +1,6 @@
 // The SeedV Lab (Beijing SeedV Technology Co., Ltd.) modifications: Copyright 2024 The SeedV Lab
-// (Beijing SeedV Technology Co., Ltd.) All Rights Reserved. The modifications in this file are the intellectual property of the SeedV Lab.
+// (Beijing SeedV Technology Co., Ltd.) All Rights Reserved.
+// The modifications in this file are the intellectual property of the SeedV Lab.
 
 // The modifications in this file are the intellectual property of the SeedV Lab and are governed by
 // the same license terms as the original sourcecode
@@ -30,11 +31,13 @@ namespace RTLTMPro {
     /// </summary>
     public static void Fix(FastStringBuilder input, FastStringBuilder output, 
         bool farsi, bool fixTextTags, bool preserveNumbers) {
-      // Some texts like tags, English words and numbers need to be displayed in their original order.
-      // This list keeps the characters that their order should be reserved and streams reserved texts into final letters.
+      // Some texts like tags and English words need to be displayed in their original order.
+      // This list keeps the characters that their order should be reserved
+      // and streams reserved texts into final letters.
       _ltrTextHolder.Clear();
       _tagTextHolder.Clear();
-      var (inputCharacterType, inputType) = MixedTypographer.CharactersTypeDetermination(input);
+      var (inputCharacterType, inputType) = 
+          MixedTypographer.CharactersTypeDetermination(input);
       // Tips:
       // Process is invert order, so the export text is invert in default
       for (int i = input.Length - 1; i >= 0; i--) {
@@ -61,10 +64,10 @@ namespace RTLTMPro {
             bool isValidTag = false;
             int nextI = i;
 
-            // TagTextHolder is a List for hold on the tag content sequence
-            // Tag content's final sequence is same with arabic text
-            // in this whole Process,Tag content will be revert sequence in last unit
-            // so in this unit,Tag content's sequence is same with English
+            // TagTextHolder is a List that stores tag contents in LTR order
+            // The final order of the tag contents needs to be the same RTL order as the Arabic text
+            // Therefore, during the entire Text processing,
+            // the tag contents must be adjusted to RTL order in the last cell
             _tagTextHolder.Add(characterAtThisIndex);
 
             for (int j = i - 1; j >= 0; j--) {
@@ -73,8 +76,8 @@ namespace RTLTMPro {
               _tagTextHolder.Add(jChar);
 
               if (jChar == '<') {
-                // TODO: Tag Valid judgment is to simple
-                // other invalid condition also need consider 
+                // TODO: Tag validity judgment is too simple
+                // Other invalid situations also need to be considered
                 var jPlus1Char = input.Get(j + 1);
                 // Tags do not start with space
                 if (jPlus1Char == ' ') {
@@ -88,14 +91,14 @@ namespace RTLTMPro {
             }
             
             if (isValidTag) {
-              // if a Tag is find and the Tag content is valid.
-              // fixer going to a new split.
-              // first thing is pushing the LTR list buffer into output buffer
-              // then get Tag content's reverse text and push into output buffer
-              // if the Tag content is invalid
-              // fixer continue work in old split
-              // Bug: if tag is between two English text
-              // this tag push process shuffle English text 
+              // If tag is found and tag content is valid.
+              // Fixer will go to new split.
+              // First push LTR list buffer to output buffer
+              // Then get reverse text of tag content and push to output buffer
+              // If tag content is invalid
+              // Fixer continues to work in old split
+              // Error: If tag is between two English texts
+              // This tag push process will mess up English text
               FlushBufferToOutput(_ltrTextHolder, output);
               FlushBufferToOutput(_tagTextHolder, output);
               i = nextI;
@@ -110,10 +113,12 @@ namespace RTLTMPro {
 
         #region process with Punctutaion and Symbol || Mirrored Chars
 
-        if (Char32Utils.IsPunctuation(characterAtThisIndex) || Char32Utils.IsSymbol(characterAtThisIndex) ||
+        if (Char32Utils.IsPunctuation(characterAtThisIndex) 
+            || Char32Utils.IsSymbol(characterAtThisIndex) ||
             characterAtThisIndex == ' ') {
           ContextType characterType = inputCharacterType[i];
-          if (_mirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.RightToLeft) {
+          if (_mirroredCharsSet.Contains((char)characterAtThisIndex) 
+              && characterType == ContextType.RightToLeft) {
             characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
             FlushBufferToOutput(_ltrTextHolder, output);
             output.Append(characterAtThisIndex);
@@ -156,7 +161,8 @@ namespace RTLTMPro {
           bool isAfterSymbol = Char32Utils.IsSymbol(previousCharacter);
           bool isBeforeSymbol = Char32Utils.IsSymbol(nextCharacter);
 
-          // For cases where english words and farsi/arabic are mixed. This allows for using farsi/arabic, english and numbers in one sentence.
+          // For cases where english words and farsi/arabic are mixed.
+          // This allows for using farsi/arabic, english and numbers in one sentence.
           // If the space is between numbers,symbols or English words, keep the order
           if (characterAtThisIndex == ' ' &&
               (isBeforeEnglishChar || isBeforeNumber || isBeforeSymbol) &&
@@ -166,13 +172,14 @@ namespace RTLTMPro {
           }
         }
 
-        if (Char32Utils.IsLetter(characterAtThisIndex) && !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
+        if (Char32Utils.IsLetter(characterAtThisIndex) && 
+            !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
             Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi)) {
           _ltrTextHolder.Add(characterAtThisIndex);
           continue;
         }
 
-        // handle surrogates
+        // Handle surrogates
         if (characterAtThisIndex >= (char)0xD800 &&
             characterAtThisIndex <= (char)0xDBFF ||
             characterAtThisIndex >= (char)0xDC00 && characterAtThisIndex <= (char)0xDFFF) {
