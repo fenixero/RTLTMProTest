@@ -169,7 +169,7 @@ namespace RTLTMPro {
           }
         }
 
-        if (Char32Utils.IsLetter(characterAtThisIndex) || !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
+        if (Char32Utils.IsLetter(characterAtThisIndex) && !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
             Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi)) {
           LtrTextHolder.Add(characterAtThisIndex);
           continue;
