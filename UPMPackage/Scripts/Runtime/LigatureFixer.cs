@@ -15,7 +15,7 @@ namespace RTLTMPro {
 
 
     private static readonly HashSet<char>
-      _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
+        _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
 
     private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
@@ -26,10 +26,10 @@ namespace RTLTMPro {
     }
 
     /// <summary>
-    ///     Fixes the flow of the text.
+    /// Fixes the flow of the text.
     /// </summary>
-    public static void Fix(FastStringBuilder input, FastStringBuilder output, bool farsi, bool fixTextTags,
-      bool preserveNumbers) {
+    public static void Fix(FastStringBuilder input, FastStringBuilder output, 
+        bool farsi, bool fixTextTags, bool preserveNumbers) {
       // Some texts like tags, English words and numbers need to be displayed in their original order.
       // This list keeps the characters that their order should be reserved and streams reserved texts into final letters.
       _ltrTextHolder.Clear();
