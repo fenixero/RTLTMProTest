@@ -1,46 +1,49 @@
-﻿using System.Linq;
+﻿// The SeedV Lab (Beijing SeedV Technology Co., Ltd.) modifications: Copyright 2024 The SeedV Lab
+// (Beijing SeedV Technology Co., Ltd.) All Rights Reserved. The modifications in this file are the intellectual property of the SeedV Lab.
+
+using System.Linq;
 
 namespace RTLTMPro {
   public class MixedTypographer {
     public static (ContextType[], ContextType) CharactersTypeDetermination(FastStringBuilder input) {
-      bool hasArabic = false;
-      bool hasEnglish = false;
+      bool hasRightToLeft = false;
+      bool hasLeftToRight = false;
       ContextType[] isRtl = new ContextType[input.Length];
 
-      #region Mark arabic character
+      #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
         int ch = input.Get(i);
 
-        bool isArabic = (ch >= '\u0600' && ch <= '\u06FF') ||
-                        (ch >= '\u0750' && ch <= '\u077F') ||
-                        (ch >= '\u08A0' && ch <= '\u08FF') ||
-                        (ch >= '\uFB50' && ch <= '\uFDFF') || //U+FB50 - U+FDFF
-                        (ch >= '\uFE70' && ch <= '\uFEFF') || //U+FE70 - U+FEFF
-                        (ch >= 0x1EE00 && ch <= 0x1EEFF) ||
-                        ch == 0xFFFF;
-        isRtl[i] = isArabic ? ContextType.Arabic : ContextType.Default;
-        hasArabic = hasArabic || isArabic;
+        bool isRightToLeft = (ch >= '\u0600' && ch <= '\u06FF') ||
+                             (ch >= '\u0750' && ch <= '\u077F') ||
+                             (ch >= '\u08A0' && ch <= '\u08FF') ||
+                             (ch >= '\uFB50' && ch <= '\uFDFF') || // U+FB50 - U+FDFF
+                             (ch >= '\uFE70' && ch <= '\uFEFF') || // U+FE70 - U+FEFF
+                             (ch >= 0x1EE00 && ch <= 0x1EEFF) ||
+                             ch == 0xFFFF;
+        isRtl[i] = isRightToLeft ? ContextType.RightToLeft : ContextType.Default;
+        hasRightToLeft = hasRightToLeft || isRightToLeft;
       }
 
       #endregion
 
-      #region Mark English character
+      #region Mark LTR character
 
       for (int i = 0; i < isRtl.Length; i++) {
         if (isRtl[i] == 0) {
           int ch = input.Get(i);
-          bool isEnglish = Char32Utils.IsEnglishLetter(ch);
-          isRtl[i] = isEnglish ? ContextType.English : ContextType.Default;
-          hasEnglish = hasEnglish || isEnglish;
+          bool isLeftToRight = Char32Utils.IsLetter(ch) && !Char32Utils.IsRTLCharacter(ch);
+          isRtl[i] = isLeftToRight ? ContextType.LeftToRight : ContextType.Default;
+          hasLeftToRight = hasLeftToRight || isLeftToRight;
         }
       }
 
       #endregion
 
-      //if no Arabic and English character is find, set to English
-      if (!hasArabic && !hasEnglish)
-        return (Enumerable.Repeat(ContextType.English, input.Length).ToArray(), ContextType.English);
+      // if no RightToLeft and LeftToRight character is find, set to LeftToRight
+      if (!hasRightToLeft && !hasLeftToRight)
+        return (Enumerable.Repeat(ContextType.LeftToRight, input.Length).ToArray(), ContextType.LeftToRight);
 
       #region Mark Punctuation character and symbol character
 
@@ -52,17 +55,17 @@ namespace RTLTMPro {
 
           ContextType previousType = ContextType.Default;
           ContextType behindType = ContextType.Default;
-          // White Space didn't affect text composing in current logic
-          // reserve for farther logic optimization
+
           bool previousWhiteSpace = false;
           bool behindWhiteSpace = false;
 
-          // search backward for Context.Type
-          // maybe a failed searching 
+          // Search forward for Context.Type.
+          // Maybe a failed searching.
           for (int j = 1; j <= i; j++) {
             if (input.Get(i - j) == ' ') {
               previousWhiteSpace = true;
             }
+
             if (isRtl[i - j] != ContextType.Default) {
               previousType = isRtl[i - j];
 
@@ -70,16 +73,17 @@ namespace RTLTMPro {
             }
           }
 
-          // search forward for Context.Type
-          // maybe a failed searching
+          // Search forward for Context.Type.
+          // Maybe a failed searching.
           for (int j = 1; j + i <= input.Length - 1; j++) {
             if (input.Get(i + j) == ' ') {
               behindWhiteSpace = true;
             }
+
             if (isRtl[i + j] != ContextType.Default) {
               behindType = isRtl[i + j];
               break;
-            } 
+            }
           }
 
           if (previousType == ContextType.Default && behindType != ContextType.Default) {
@@ -113,21 +117,25 @@ namespace RTLTMPro {
                     }
                   }
 
-                  //if right character is rightest, case previous type only
-                  if (i + j == input.Length - 1) mirrorBehindType = mirrorPreviousType;
-                  //if previous type is default, there is no letter in or front this mirror character
-                  if (mirrorPreviousType == ContextType.Default) mirrorPreviousType = mirrorBehindType;
-                  //if all type is default, all text is not letter
+                  // If the current character is the last in the input, only consider the previous type.
+                  if (i + j == input.Length - 1) {
+                    mirrorBehindType = mirrorPreviousType;
+                  }
+                  // If the previous type is default, assume no letter exists before this character.
                   if (mirrorPreviousType == ContextType.Default) {
-                    isRtl[i] = ContextType.Arabic;
-                    isRtl[i + j] = ContextType.Arabic;
+                    mirrorPreviousType = mirrorBehindType;
+                  }
+                  // If both previous and next types are default, assume the text contains no letters.
+                  if (mirrorPreviousType == ContextType.Default) {
+                    isRtl[i] = ContextType.RightToLeft;
+                    isRtl[i + j] = ContextType.RightToLeft;
                     break;
                   }
 
-                  if (previousType == ContextType.English && behindType == ContextType.English &&
-                      mirrorPreviousType == ContextType.English) {
-                    isRtl[i] = ContextType.English;
-                    isRtl[i + j] = ContextType.English;
+                  if (previousType == ContextType.LeftToRight && behindType == ContextType.LeftToRight &&
+                      mirrorPreviousType == ContextType.LeftToRight) {
+                    isRtl[i] = ContextType.LeftToRight;
+                    isRtl[i + j] = ContextType.LeftToRight;
                     break;
                   }
                 }
@@ -150,27 +158,29 @@ namespace RTLTMPro {
                     break;
                   }
                 }
+
                 for (int k = 1; k + i + j < input.Length; k++) {
                   if (isRtl[i + j + k] != ContextType.Default) {
                     pairedBehindType = isRtl[i + j + k];
                     break;
                   }
                 }
-                //if right character is rightest, case previous type only
+
+                // If right character is rightest, case previous type only
                 if (i + j == input.Length - 1) pairedBehindType = pairedPreviousType;
-                //if previous type is default, there is no letter in or front this mirror character
+                // If previous type is default, there is no letter in or front this mirror character
                 if (pairedPreviousType == ContextType.Default) pairedPreviousType = pairedBehindType;
-                //if all type is default, all text is not letter
+                // If all type is default, all text is not letter
                 if (pairedPreviousType == ContextType.Default) {
-                  isRtl[i] = ContextType.Arabic;
-                  isRtl[i + j] = ContextType.Arabic;
+                  isRtl[i] = ContextType.RightToLeft;
+                  isRtl[i + j] = ContextType.RightToLeft;
                   break;
                 }
 
-                if (previousType == ContextType.English && behindType == ContextType.English &&
-                    pairedPreviousType == ContextType.English) {
-                  isRtl[i] = ContextType.English;
-                  isRtl[i + j] = ContextType.English;
+                if (previousType == ContextType.LeftToRight && behindType == ContextType.LeftToRight &&
+                    pairedPreviousType == ContextType.LeftToRight) {
+                  isRtl[i] = ContextType.LeftToRight;
+                  isRtl[i + j] = ContextType.LeftToRight;
                   break;
                 }
               }
@@ -178,47 +188,54 @@ namespace RTLTMPro {
           }
 
           #endregion
+
           #region Mark Normal Punctuation character and symbol character
 
           if (isRtl[i] != ContextType.Default) continue;
-          if (previousType == ContextType.English && behindType == ContextType.English) {
-            isRtl[i] = ContextType.English;
+          if (previousType == ContextType.LeftToRight && behindType == ContextType.LeftToRight) {
+            isRtl[i] = ContextType.LeftToRight;
             continue;
           }
 
-          if (previousType == ContextType.Arabic && behindType == ContextType.Arabic) {
-            isRtl[i] = ContextType.Arabic;
+          if (previousType == ContextType.RightToLeft && behindType == ContextType.RightToLeft) {
+            isRtl[i] = ContextType.RightToLeft;
             continue;
           }
-          //if this character is a white space, previous & behind are not English same time  
+
+          // If this character is a white space, previous & behind are not LeftToRight same time  
           if (input.Get(i) == ' ') {
-            isRtl[i] = ContextType.Arabic;
+            isRtl[i] = ContextType.RightToLeft;
           }
-          // in order to clearly see the judgment logic, ignore the grammar prompts here
+
+          // In order to clearly see the judgment logic, ignore the grammar prompts here
           if (previousWhiteSpace == false && behindWhiteSpace == true) {
             isRtl[i] = previousType;
             continue;
           }
-          // in order to clearly see the judgment logic, ignore the grammar prompts here
+
+          // In order to clearly see the judgment logic, ignore the grammar prompts here
           if (previousWhiteSpace == true && behindWhiteSpace == false) {
             isRtl[i] = behindType;
             continue;
           }
-          // in order to clearly see the judgment logic, ignore the grammar prompts here
+
+          // In order to clearly see the judgment logic, ignore the grammar prompts here
           if (previousWhiteSpace == false && behindWhiteSpace == false) {
-            isRtl[i] = ContextType.Arabic;
+            isRtl[i] = ContextType.RightToLeft;
           }
-          // in order to clearly see the judgment logic, ignore the grammar prompts here
+
+          // In order to clearly see the judgment logic, ignore the grammar prompts here
           if (previousWhiteSpace == true && behindWhiteSpace == true) {
-            isRtl[i] = ContextType.Arabic;
+            isRtl[i] = ContextType.RightToLeft;
           }
+
           #endregion
         }
       }
 
       #endregion
 
-      return (isRtl, hasArabic ? ContextType.Arabic : ContextType.English);
+      return (isRtl, hasRightToLeft ? ContextType.RightToLeft : ContextType.LeftToRight);
     }
   }
 }

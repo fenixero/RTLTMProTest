@@ -1,3 +1,6 @@
+// The SeedV Lab (Beijing SeedV Technology Co., Ltd.) modifications: Copyright 2024 The SeedV Lab
+// (Beijing SeedV Technology Co., Ltd.) All Rights Reserved. The modifications in this file are the intellectual property of the SeedV Lab.
+
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -61,10 +64,10 @@ namespace RTLTMPro {
             bool isValidTag = false;
             int nextI = i;
 
-            //TagTextHolder is a List for hold on the tag content sequence
-            //Tag content's final sequence is same with arabic text
-            //in this whole Process,Tag content will be revert sequence in last unit
-            //so in this unit,Tag content's sequence is same with English
+            // TagTextHolder is a List for hold on the tag content sequence
+            // Tag content's final sequence is same with arabic text
+            // in this whole Process,Tag content will be revert sequence in last unit
+            // so in this unit,Tag content's sequence is same with English
             TagTextHolder.Add(characterAtThisIndex);
 
             for (int j = i - 1; j >= 0; j--) {
@@ -113,21 +116,21 @@ namespace RTLTMPro {
         if (Char32Utils.IsPunctuation(characterAtThisIndex) || Char32Utils.IsSymbol(characterAtThisIndex) ||
             characterAtThisIndex == ' ') {
           var characterType = inputCharacterType[i];
-          if (MirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.Arabic) {
+          if (MirroredCharsSet.Contains((char)characterAtThisIndex) && characterType == ContextType.RightToLeft) {
             characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
             FlushBufferToOutput(LtrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
-          //fixed: refer to inputCharacterTpye to process Character
+          // fixed: refer to inputCharacterTpye to process Character
 
-          if (characterType == ContextType.Arabic) {
+          if (characterType == ContextType.RightToLeft) {
             FlushBufferToOutput(LtrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
 
-          if (characterType == ContextType.English) {
+          if (characterType == ContextType.LeftToRight) {
             LtrTextHolder.Add(characterAtThisIndex);
             continue;
           }
@@ -135,7 +138,7 @@ namespace RTLTMPro {
           if (characterType == ContextType.Default) {
             Debug.LogError($"Error Character Type Process,index:{i},Text:{input}," +
                            $"Text char array:{input.ToString().ToCharArray()}");
-            if (inputType == ContextType.Arabic) {
+            if (inputType == ContextType.RightToLeft) {
               FlushBufferToOutput(LtrTextHolder, output);
               output.Append(characterAtThisIndex);
               continue;
@@ -145,6 +148,7 @@ namespace RTLTMPro {
             }
           }
         }
+
         #endregion
 
         if (isInMiddle) {
@@ -165,7 +169,7 @@ namespace RTLTMPro {
           }
         }
 
-        if (Char32Utils.IsEnglishLetter(characterAtThisIndex) ||
+        if (Char32Utils.IsLetter(characterAtThisIndex) || !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
             Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi)) {
           LtrTextHolder.Add(characterAtThisIndex);
           continue;
