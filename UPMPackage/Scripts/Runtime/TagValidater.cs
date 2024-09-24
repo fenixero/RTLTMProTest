@@ -5,6 +5,21 @@ using TMPro;
 
 namespace RTLTMPro {
   public partial class RTLTextMeshPro {
+    private readonly Type _unicodeCharType;
+    private readonly FieldInfo _unicodeField;
+    private readonly FieldInfo _stringIndexField;
+    private readonly FieldInfo _lengthField;
+    private readonly MethodInfo _methodValidateHtmlTag;
+
+    public RTLTextMeshPro() {
+      _unicodeCharType = typeof(TMP_Text).GetNestedType("UnicodeChar",
+        BindingFlags.NonPublic | BindingFlags.Instance);
+      _unicodeField = _unicodeCharType.GetField("unicode");
+      _stringIndexField = _unicodeCharType.GetField("stringIndex");
+      _lengthField = _unicodeCharType.GetField("length");
+      _methodValidateHtmlTag = typeof(TextMeshProUGUI).GetMethod("ValidateHtmlTag",
+        BindingFlags.NonPublic | BindingFlags.Instance);
+    }
     private List<(int,int)> FindTags(string input) {
       var tags = new List<(int,int)>();
       for (int i = 0; i < input.Length; i++) {
@@ -21,24 +36,18 @@ namespace RTLTMPro {
       return tags;
     }
     private bool ValidateTag(string input, int startIndex, out int endIndex) {
-      // 创建 UnicodeChar 的数组
-      var unicodeCharType = typeof(TMP_Text).GetNestedType("UnicodeChar",
-        BindingFlags.NonPublic | BindingFlags.Instance);
-      var unicodeChars = Array.CreateInstance(unicodeCharType, input.Length);
-      // 填充数组
-      for (int i = 0; i < input.Length; i++) {
-        var unicodeChar = Activator.CreateInstance(unicodeCharType);
-        unicodeCharType.GetField("unicode").SetValue(unicodeChar, input[i]);
-        unicodeCharType.GetField("stringIndex").SetValue(unicodeChar, i);
-        unicodeCharType.GetField("length").SetValue(unicodeChar, 1);
-        unicodeChars.SetValue(unicodeChar, i);
-      }
-
-      MethodInfo method = typeof(TextMeshProUGUI).GetMethod("ValidateHtmlTag",
-        BindingFlags.NonPublic | BindingFlags.Instance);
-      if (method != null) {
+      if (_methodValidateHtmlTag != null) {
+        var unicodeChars = Array.CreateInstance(_unicodeCharType, input.Length);
+        // 填充数组
+        for (int i = 0; i < input.Length; i++) {
+          object unicodeChar = Activator.CreateInstance(_unicodeCharType);
+          _unicodeField.SetValue(unicodeChar, input[i]);
+          _stringIndexField.SetValue(unicodeChar, i);
+          _lengthField.SetValue(unicodeChar, 1);
+          unicodeChars.SetValue(unicodeChar, i);
+        }
         object[] parameters = { unicodeChars, startIndex, null };
-        bool result = (bool)method.Invoke(this, parameters);
+        bool result = (bool)_methodValidateHtmlTag.Invoke(this, parameters);
         endIndex = (int)parameters[2];
         return result;
       } else {

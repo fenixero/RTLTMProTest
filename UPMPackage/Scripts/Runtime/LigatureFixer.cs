@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace RTLTMPro {
@@ -35,8 +34,8 @@ namespace RTLTMPro {
       // and streams reserved texts into final letters.
       _ltrTextHolder.Clear();
       _tagTextHolder.Clear();
-      var (inputCharacterType, inputType) = 
-          MixedTypographer.CharactersTypeDetermination(input,tags,fixTextTags);
+      var (inputCharacterType, inputType) =
+          MixedTypographer.CharactersTypeDetermination(input, tags, fixTextTags);
       // Tips:
       // Process is invert order, so the export text is invert in default
       for (int i = input.Length - 1; i >= 0; i--) {
@@ -95,7 +94,7 @@ namespace RTLTMPro {
             output.Append(characterAtThisIndex);
             continue;
           }
-          // fixed: refer to inputCharacterTpye to process Character
+          // fixed: refer to inputCharacterType to process Character
 
           if (characterType == ContextType.RightToLeft) {
             FlushBufferToOutputReverse(_ltrTextHolder, output);

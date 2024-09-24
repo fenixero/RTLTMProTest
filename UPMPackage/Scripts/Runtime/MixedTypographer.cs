@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 
 namespace RTLTMPro {
-  public class MixedTypographer {
+  public static class MixedTypographer {
     public static (ContextType[], ContextType) CharactersTypeDetermination
         (FastStringBuilder input,List<(int,int)> tags,bool fixTextTags) {
       bool hasRightToLeft = false;
@@ -11,14 +11,15 @@ namespace RTLTMPro {
       var isRtl = new ContextType[input.Length];
 
       #region Mark Tags
-      
-      if(fixTextTags && tags!=null)
-        foreach (var (start,end) in tags)
-        {
+
+      if (fixTextTags && tags != null) {
+        foreach (var (start, end) in tags) {
           for (int j = start; j <= end; j++) {
             isRtl[j] = ContextType.Tag;
           }
         }
+      }
+
       #endregion
       
       #region Mark RTL character
