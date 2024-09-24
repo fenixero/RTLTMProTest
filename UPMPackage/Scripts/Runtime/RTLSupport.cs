@@ -1,6 +1,8 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable CommentTypo
 
+using System.Collections.Generic;
+
 namespace RTLTMPro
 {
     public static class RTLSupport
@@ -27,6 +29,7 @@ namespace RTLTMPro
         /// <returns>Fixed text</returns>
         public static void FixRTL(
             string input,
+            List<(int,int)> tags,
             FastStringBuilder output,
             bool farsi = true,
             bool fixTextTags = true,
@@ -41,10 +44,10 @@ namespace RTLTMPro
             
             TashkeelFixer.FixShaddaCombinations(glyphFixerOutput);
             // Fix flow of the text and put the result in FinalLetters field
-            LigatureFixer.Fix(glyphFixerOutput, output, farsi, fixTextTags, preserveNumbers);
+            LigatureFixer.Fix(glyphFixerOutput,tags, output, farsi, fixTextTags, preserveNumbers);
             if (fixTextTags)
             {
-                RichTextFixer.Fix(output);
+                //RichTextFixer.Fix(output);
             }
             inputBuilder.Clear();
         }

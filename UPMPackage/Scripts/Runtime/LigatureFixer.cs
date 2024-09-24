@@ -11,18 +11,24 @@ namespace RTLTMPro {
     private static readonly HashSet<char>
         _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
 
-    private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
+    private static void FlushBufferToOutputReverse(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[buffer.Count - 1 - j]);
       }
 
+      buffer.Clear();
+    }    
+    private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
+      for (int j = 0; j < buffer.Count; j++) {
+        output.Append(buffer[j]);
+      }
       buffer.Clear();
     }
 
     /// <summary>
     /// Fixes the flow of the text.
     /// </summary>
-    public static void Fix(FastStringBuilder input, FastStringBuilder output, 
+    public static void Fix(FastStringBuilder input, List<(int,int)> tags, FastStringBuilder output, 
         bool farsi, bool fixTextTags, bool preserveNumbers) {
       // Some texts like tags and English words need to be displayed in their original order.
       // This list keeps the characters that their order should be reserved
@@ -30,7 +36,7 @@ namespace RTLTMPro {
       _ltrTextHolder.Clear();
       _tagTextHolder.Clear();
       var (inputCharacterType, inputType) = 
-          MixedTypographer.CharactersTypeDetermination(input);
+          MixedTypographer.CharactersTypeDetermination(input,tags,fixTextTags);
       // Tips:
       // Process is invert order, so the export text is invert in default
       for (int i = input.Length - 1; i >= 0; i--) {
@@ -51,57 +57,29 @@ namespace RTLTMPro {
 
         #region process with Tags
 
-        if (fixTextTags) {
-          if (characterAtThisIndex == '>') {
-            // We need to check if it is actually the beginning of a tag.
-            bool isValidTag = false;
-            int nextI = i;
 
-            // TagTextHolder is a List that stores tag contents in LTR order
-            // The final order of the tag contents needs to be the same RTL order as the Arabic text
-            // Therefore, during the entire Text processing,
-            // the tag contents must be adjusted to RTL order in the last cell
-            _tagTextHolder.Add(characterAtThisIndex);
-
-            for (int j = i - 1; j >= 0; j--) {
-              var jChar = input.Get(j);
-
-              _tagTextHolder.Add(jChar);
-
-              if (jChar == '<') {
-                // TODO: Tag validity judgment is too simple
-                // Other invalid situations also need to be considered
-                var jPlus1Char = input.Get(j + 1);
-                // Tags do not start with space
-                if (jPlus1Char == ' ') {
-                  break;
-                }
-
-                isValidTag = true;
-                nextI = j;
-                break;
-              }
+        if (inputCharacterType[i] == ContextType.Tag) {
+          int nextI = i;
+          // TagTextHolder is a List that stores tag contents in LTR order
+          // The final order of the tag contents needs to be the same RTL order as the Arabic text
+          // Therefore, during the entire Text processing,
+          // the tag contents must be adjusted to RTL order in the last cell
+          _tagTextHolder.Add(characterAtThisIndex);
+          for (int j = i - 1; j >= 0; j--) {
+            if (inputCharacterType[j] != ContextType.Tag) {
+              nextI = j;
+              break;
             }
-            
-            if (isValidTag) {
-              // If tag is found and tag content is valid.
-              // Fixer will go to new split.
-              // First push LTR list buffer to output buffer
-              // Then get reverse text of tag content and push to output buffer
-              // If tag content is invalid
-              // Fixer continues to work in old split
-              // Error: If tag is between two English texts
-              // This tag push process will mess up English text
-              FlushBufferToOutput(_ltrTextHolder, output);
-              FlushBufferToOutput(_tagTextHolder, output);
-              i = nextI;
-              continue;
-            } else {
-              _tagTextHolder.Clear();
-            }
+            int jChar = input.Get(j);
+            _tagTextHolder.Add(jChar);
+            if (j == 0) nextI = -1;
           }
+          FlushBufferToOutputReverse(_ltrTextHolder, output);
+          FlushBufferToOutput(_tagTextHolder, output);
+          
+          i = nextI + 1 ;
+          continue;
         }
-
         #endregion
 
         #region process with Punctutaion and Symbol || Mirrored Chars
@@ -113,14 +91,14 @@ namespace RTLTMPro {
           if (_mirroredCharsSet.Contains((char)characterAtThisIndex) 
               && characterType == ContextType.RightToLeft) {
             characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
-            FlushBufferToOutput(_ltrTextHolder, output);
+            FlushBufferToOutputReverse(_ltrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
           // fixed: refer to inputCharacterTpye to process Character
 
           if (characterType == ContextType.RightToLeft) {
-            FlushBufferToOutput(_ltrTextHolder, output);
+            FlushBufferToOutputReverse(_ltrTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
@@ -134,7 +112,7 @@ namespace RTLTMPro {
             Debug.LogError($"Error Character Type Process,index:{i},Text:{input}," +
                            $"Text char array:{input.ToString().ToCharArray()}");
             if (inputType == ContextType.RightToLeft) {
-              FlushBufferToOutput(_ltrTextHolder, output);
+              FlushBufferToOutputReverse(_ltrTextHolder, output);
               output.Append(characterAtThisIndex);
               continue;
             } else {
@@ -180,7 +158,7 @@ namespace RTLTMPro {
           continue;
         }
 
-        FlushBufferToOutput(_ltrTextHolder, output);
+        FlushBufferToOutputReverse(_ltrTextHolder, output);
 
         if (characterAtThisIndex != 0xFFFF &&
             characterAtThisIndex != (int)SpecialCharacters.ZeroWidthNoJoiner) {
@@ -188,7 +166,7 @@ namespace RTLTMPro {
         }
       }
 
-      FlushBufferToOutput(_ltrTextHolder, output);
+      FlushBufferToOutputReverse(_ltrTextHolder, output);
     }
   }
 }

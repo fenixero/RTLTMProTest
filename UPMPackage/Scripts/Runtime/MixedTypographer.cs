@@ -1,16 +1,30 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace RTLTMPro {
   public class MixedTypographer {
     public static (ContextType[], ContextType) CharactersTypeDetermination
-        (FastStringBuilder input) {
+        (FastStringBuilder input,List<(int,int)> tags,bool fixTextTags) {
       bool hasRightToLeft = false;
       bool hasLeftToRight = false;
       var isRtl = new ContextType[input.Length];
 
+      #region Mark Tags
+      
+      if(fixTextTags && tags!=null)
+        foreach (var (start,end) in tags)
+        {
+          for (int j = start; j <= end; j++) {
+            isRtl[j] = ContextType.Tag;
+          }
+        }
+      #endregion
+      
       #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
+        if (isRtl[i] != ContextType.Default) continue;
         int ch = input.Get(i);
 
         bool isRightToLeft = (ch >= '\u0600' && ch <= '\u06FF') ||
@@ -29,6 +43,7 @@ namespace RTLTMPro {
       #region Mark LTR character
 
       for (int i = 0; i < isRtl.Length; i++) {
+        if (isRtl[i] != ContextType.Default) continue;
         if (isRtl[i] == 0) {
           int ch = input.Get(i);
           bool isLeftToRight = Char32Utils.IsLetter(ch) && !Char32Utils.IsRTLCharacter(ch);
@@ -65,7 +80,7 @@ namespace RTLTMPro {
               previousWhiteSpace = true;
             }
 
-            if (isRtl[i - j] != ContextType.Default) {
+            if (isRtl[i - j] != ContextType.Default && isRtl[i - j] != ContextType.Tag) {
               previousType = isRtl[i - j];
 
               break;
@@ -79,7 +94,7 @@ namespace RTLTMPro {
               behindWhiteSpace = true;
             }
 
-            if (isRtl[i + j] != ContextType.Default) {
+            if (isRtl[i + j] != ContextType.Default && isRtl[i + j] != ContextType.Tag) {
               behindType = isRtl[i + j];
               break;
             }
@@ -103,14 +118,14 @@ namespace RTLTMPro {
                   ContextType mirrorPreviousType = ContextType.Default;
                   ContextType mirrorBehindType = ContextType.Default;
                   for (int k = 1; k <= j - 1; k++) {
-                    if (isRtl[i + j - k] != ContextType.Default) {
+                    if (isRtl[i + j - k] != ContextType.Default && isRtl[i + j - k] != ContextType.Tag) {
                       mirrorPreviousType = isRtl[i + j - k];
                       break;
                     }
                   }
 
                   for (int k = 1; k + i + j < input.Length; k++) {
-                    if (isRtl[i + j + k] != ContextType.Default) {
+                    if (isRtl[i + j + k] != ContextType.Default && isRtl[i + j + k] != ContextType.Tag) {
                       mirrorBehindType = isRtl[i + j + k];
                       break;
                     }
@@ -156,14 +171,14 @@ namespace RTLTMPro {
                 ContextType pairedPreviousType = ContextType.Default;
                 ContextType pairedBehindType = ContextType.Default;
                 for (int k = 1; k <= j - 1; k++) {
-                  if (isRtl[i + j - k] != ContextType.Default) {
+                  if (isRtl[i + j - k] != ContextType.Default && isRtl[i + j - k] != ContextType.Tag) {
                     pairedPreviousType = isRtl[i + j - k];
                     break;
                   }
                 }
 
                 for (int k = 1; k + i + j < input.Length; k++) {
-                  if (isRtl[i + j + k] != ContextType.Default) {
+                  if (isRtl[i + j + k] != ContextType.Default && isRtl[i + j + k] != ContextType.Tag) {
                     pairedBehindType = isRtl[i + j + k];
                     break;
                   }

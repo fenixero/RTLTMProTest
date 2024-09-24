@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RTLTMPro
 {
     [ExecuteInEditMode]
-    public class RTLTextMeshPro : TextMeshProUGUI
+    public partial class RTLTextMeshPro : TextMeshProUGUI
     {
         // ReSharper disable once InconsistentNaming
 #if TMP_VERSION_2_1_0_OR_NEWER
@@ -126,7 +126,8 @@ namespace RTLTMPro
                 return input;
 
             finalText.Clear();
-            RTLSupport.FixRTL(input, finalText, farsi, fixTags, preserveNumbers);
+            var tags = FindTags(input);
+            RTLSupport.FixRTL(input,tags, finalText, farsi, fixTags, preserveNumbers);
             finalText.Reverse();
             return finalText.ToString();
         }
