@@ -112,54 +112,7 @@ namespace RTLTMPro {
           #region Mark Mirrored Character
 
           if (MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch)) {
-            var mirrorCharacter = MirroredCharsMaper.MirroredCharsMap[(char)ch];
-            if (mirrorCharacter > (char)ch) {
-              for (int j = 1; j < input.Length - i; j++) {
-                if (input.Get(i + j) == mirrorCharacter) {
-                  ContextType mirrorPreviousType = ContextType.Default;
-                  ContextType mirrorBehindType = ContextType.Default;
-                  for (int k = 1; k <= j - 1; k++) {
-                    if (isRtl[i + j - k] != ContextType.Default && isRtl[i + j - k] != ContextType.Tag) {
-                      mirrorPreviousType = isRtl[i + j - k];
-                      break;
-                    }
-                  }
-
-                  for (int k = 1; k + i + j < input.Length; k++) {
-                    if (isRtl[i + j + k] != ContextType.Default && isRtl[i + j + k] != ContextType.Tag) {
-                      mirrorBehindType = isRtl[i + j + k];
-                      break;
-                    }
-                  }
-
-                  // If the current character is the last in the input,
-                  // only consider the previous type.
-                  if (i + j == input.Length - 1) {
-                    mirrorBehindType = mirrorPreviousType;
-                  }
-                  // If the previous type is default,
-                  // assume no letter exists before this character.
-                  if (mirrorPreviousType == ContextType.Default) {
-                    mirrorPreviousType = mirrorBehindType;
-                  }
-                  // If both previous and next types are default,
-                  // assume the text contains no letters.
-                  if (mirrorPreviousType == ContextType.Default) {
-                    isRtl[i] = ContextType.RightToLeft;
-                    isRtl[i + j] = ContextType.RightToLeft;
-                    break;
-                  }
-
-                  if (previousType == ContextType.LeftToRight 
-                      && behindType == ContextType.LeftToRight &&
-                      mirrorPreviousType == ContextType.LeftToRight) {
-                    isRtl[i] = ContextType.LeftToRight;
-                    isRtl[i + j] = ContextType.LeftToRight;
-                    break;
-                  }
-                }
-              }
-            }
+            GetMirroredCharsType(input, i, isRtl);
           }
 
           #endregion
@@ -172,14 +125,16 @@ namespace RTLTMPro {
                 ContextType pairedPreviousType = ContextType.Default;
                 ContextType pairedBehindType = ContextType.Default;
                 for (int k = 1; k <= j - 1; k++) {
-                  if (isRtl[i + j - k] != ContextType.Default && isRtl[i + j - k] != ContextType.Tag) {
+                  if (isRtl[i + j - k] != ContextType.Default &&
+                      isRtl[i + j - k] != ContextType.Tag) {
                     pairedPreviousType = isRtl[i + j - k];
                     break;
                   }
                 }
 
                 for (int k = 1; k + i + j < input.Length; k++) {
-                  if (isRtl[i + j + k] != ContextType.Default && isRtl[i + j + k] != ContextType.Tag) {
+                  if (isRtl[i + j + k] != ContextType.Default &&
+                      isRtl[i + j + k] != ContextType.Tag) {
                     pairedBehindType = isRtl[i + j + k];
                     break;
                   }
@@ -188,8 +143,8 @@ namespace RTLTMPro {
                 // If right character is rightest, case previous type only
                 if (i + j == input.Length - 1) pairedBehindType = pairedPreviousType;
                 // If previous type is default, there is no letter in or front this mirror character
-                if (pairedPreviousType == ContextType.Default) pairedPreviousType 
-                    = pairedBehindType;
+                if (pairedPreviousType == ContextType.Default)
+                  pairedPreviousType = pairedBehindType;
                 // If all type is default, all text is not letter
                 if (pairedPreviousType == ContextType.Default) {
                   isRtl[i] = ContextType.RightToLeft;
@@ -256,6 +211,102 @@ namespace RTLTMPro {
       #endregion
 
       return (isRtl, hasRightToLeft ? ContextType.RightToLeft : ContextType.LeftToRight);
+    }
+    /// <summary>
+    /// GetMirroredCharsType use for set context type and return valid mirrored character index 
+    /// </summary>
+    /// <param name="input">input string</param>
+    /// <param name="index">start mirror character index</param>
+    /// <param name="isRtl">array for every character's context type</param>
+    /// <returns>mirrored character index</returns>
+    private static int GetMirroredCharsType(FastStringBuilder input,int index,ContextType[] isRtl) {
+      int ch = input.Get(index);
+      int mirroredCharacterIndex = index;
+      if (!MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch)) return mirroredCharacterIndex;
+      if (isRtl[index] == ContextType.Tag) {
+        for (int j = 1; j < input.Length - index; j++) {
+          if (isRtl[index + j] == ContextType.Tag) {
+            mirroredCharacterIndex = index + j;
+          }
+
+          if (isRtl[index + j] != ContextType.Tag) {
+            return mirroredCharacterIndex;
+          }
+        }
+      }
+
+      var mirrorCharacter = MirroredCharsMaper.MirroredCharsMap[(char)ch];
+      if (mirrorCharacter > (char)ch) {
+
+        for (int j = 1; j < input.Length - index; j++) {
+          if (input.Get(index + j) == mirrorCharacter) {
+            mirroredCharacterIndex = index + j;
+            ContextType mirrorPreviousType = ContextType.Default;
+            ContextType mirrorBehindType = ContextType.Default;
+            ContextType middleContentType = ContextType.Default;
+            for (int k = 1; k <= j - 1; k++) {
+              ContextType typeThere = isRtl[index + j - k];
+              if (mirrorPreviousType == ContextType.Default &&
+                  typeThere != ContextType.Default && typeThere != ContextType.Tag) {
+                mirrorPreviousType = isRtl[index + j - k];
+              }
+
+              if (middleContentType == ContextType.Default &&
+                  typeThere == ContextType.LeftToRight) {
+                middleContentType = ContextType.LeftToRight;
+              }
+
+              if (typeThere == ContextType.RightToLeft) {
+                middleContentType = ContextType.RightToLeft;
+              }
+            }
+
+            for (int k = 1; k + index + j < input.Length; k++) {
+              if (isRtl[index + j + k] != ContextType.Default &&
+                  isRtl[index + j + k] != ContextType.Tag) {
+                mirrorBehindType = isRtl[index + j + k];
+                break;
+              }
+            }
+
+            // If the current character is the last in the input,
+            // only consider the previous type.
+            if (index + j == input.Length - 1) {
+              mirrorBehindType = mirrorPreviousType;
+            }
+
+            // If the previous type is default,
+            // assume no letter exists before this character.
+            if (mirrorPreviousType == ContextType.Default) {
+              mirrorPreviousType = mirrorBehindType;
+            }
+
+            // If both previous and next types are default,
+            // assume the text contains no letters.
+            if (mirrorPreviousType == ContextType.Default) {
+              isRtl[index] = ContextType.RightToLeft;
+              isRtl[index + j] = ContextType.RightToLeft;
+              break;
+            }
+
+            if (middleContentType == ContextType.LeftToRight) {
+              isRtl[index] = ContextType.LeftToRight;
+              isRtl[index + j] = ContextType.LeftToRight;
+            } else {
+              isRtl[index] = ContextType.RightToLeft;
+              isRtl[index + j] = ContextType.RightToLeft;
+            }
+
+            break;
+          }
+
+          if (input.Get(index + j) == ch) {
+            int childEndIndex = GetMirroredCharsType(input,index + j,isRtl);
+            j = childEndIndex - index;
+          }
+        }
+      }
+      return mirroredCharacterIndex;
     }
   }
 }
