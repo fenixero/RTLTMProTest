@@ -13,12 +13,12 @@ namespace RTLTMPro {
 
     public RTLTextMeshPro() {
       _unicodeCharType = typeof(TMP_Text).GetNestedType("UnicodeChar",
-        BindingFlags.NonPublic | BindingFlags.Instance);
+          BindingFlags.NonPublic | BindingFlags.Instance);
       _unicodeField = _unicodeCharType.GetField("unicode");
       _stringIndexField = _unicodeCharType.GetField("stringIndex");
       _lengthField = _unicodeCharType.GetField("length");
       _methodValidateHtmlTag = typeof(TextMeshProUGUI).GetMethod("ValidateHtmlTag",
-        BindingFlags.NonPublic | BindingFlags.Instance);
+          BindingFlags.NonPublic | BindingFlags.Instance);
     }
     private List<(int,int)> FindTags(string input) {
       var tags = new List<(int,int)>();
