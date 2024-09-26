@@ -27,7 +27,7 @@ namespace RTLTMPro {
         if (inputCharactersType[i] != ContextType.Default) 
           continue;
         int ch = input.Get(i);
-        bool isRightToLeft = 
+        bool isRightToLeft =
             // \U0600 to \ u06FF: Arabic basic character set (including Arabic letters and some
             // punctuation marks).
             (ch >= '\u0600' && ch <= '\u06FF') ||
