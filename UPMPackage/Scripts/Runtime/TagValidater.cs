@@ -53,10 +53,8 @@ namespace RTLTMPro {
         endIndex = (int)parameters[2];
         return result;
       } else {
-        {
-          endIndex = startIndex;
-          return false;
-        }
+        endIndex = startIndex;
+        return false;
       }
     }
   }
