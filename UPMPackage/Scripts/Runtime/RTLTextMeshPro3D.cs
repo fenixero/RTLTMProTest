@@ -127,7 +127,7 @@ namespace RTLTMPro
                 return input;
 
             finalText.Clear();
-            RTLSupport.FixRTL(input, finalText, farsi, fixTags, preserveNumbers);
+            RTLSupport.FixRTL(input, null, finalText, farsi, fixTags, preserveNumbers);
             finalText.Reverse();
 
             return finalText.ToString();

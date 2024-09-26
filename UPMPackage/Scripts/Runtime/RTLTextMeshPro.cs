@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RTLTMPro
 {
     [ExecuteInEditMode]
-    public class RTLTextMeshPro : TextMeshProUGUI
+    public partial class RTLTextMeshPro : TextMeshProUGUI
     {
         // ReSharper disable once InconsistentNaming
 #if TMP_VERSION_2_1_0_OR_NEWER
@@ -92,7 +92,7 @@ namespace RTLTMPro
 
         [SerializeField] protected bool forceFix;
 
-        protected readonly FastStringBuilder finalText = new FastStringBuilder(RTLSupport.DefaultBufferSize);
+        protected readonly FastStringBuilder _finalText = new FastStringBuilder(RTLSupport.DefaultBufferSize);
 
         protected void Update()
         {
@@ -125,10 +125,10 @@ namespace RTLTMPro
             if (string.IsNullOrEmpty(input))
                 return input;
 
-            finalText.Clear();
-            RTLSupport.FixRTL(input, finalText, farsi, fixTags, preserveNumbers);
-            finalText.Reverse();
-            return finalText.ToString();
+            _finalText.Clear();
+            RTLSupport.FixRTL(input, this, _finalText, farsi, fixTags, preserveNumbers);
+            _finalText.Reverse();
+            return _finalText.ToString();
         }
     }
 }
