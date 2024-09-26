@@ -31,7 +31,7 @@ namespace RTLTMPro {
             // punctuation marks).
             (ch >= '\u0600' && ch <= '\u06FF') ||
             // \U0750 to \ U077F: Includes Arabic characters from some minority languages
-            // (such as West African Arabic).        
+            // (such as West African Arabic).
             (ch >= '\u0750' && ch <= '\u077F') ||
             // \U08A0 to \ u08FF: Contains extended Arabic characters
             // (such as Arabic diacritical marks).
