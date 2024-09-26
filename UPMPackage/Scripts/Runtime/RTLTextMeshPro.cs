@@ -92,7 +92,7 @@ namespace RTLTMPro
 
         [SerializeField] protected bool forceFix;
 
-        protected readonly FastStringBuilder finalText = new FastStringBuilder(RTLSupport.DefaultBufferSize);
+        protected readonly FastStringBuilder _finalText = new FastStringBuilder(RTLSupport.DefaultBufferSize);
 
         protected void Update()
         {
@@ -125,11 +125,10 @@ namespace RTLTMPro
             if (string.IsNullOrEmpty(input))
                 return input;
 
-            finalText.Clear();
-            var tags = FindTags(input);
-            RTLSupport.FixRTL(input,tags, finalText, farsi, fixTags, preserveNumbers);
-            finalText.Reverse();
-            return finalText.ToString();
+            _finalText.Clear();
+            RTLSupport.FixRTL(input, this, _finalText, farsi, fixTags, preserveNumbers);
+            _finalText.Reverse();
+            return _finalText.ToString();
         }
     }
 }

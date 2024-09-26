@@ -20,7 +20,8 @@ namespace RTLTMPro {
       _methodValidateHtmlTag = typeof(TextMeshProUGUI).GetMethod("ValidateHtmlTag",
           BindingFlags.NonPublic | BindingFlags.Instance);
     }
-    private List<(int,int)> FindTags(string input) {
+
+    public List<(int, int)> FindTags(string input) {
       var tags = new List<(int,int)>();
       for (int i = 0; i < input.Length; i++) {
         char ch = input[i];

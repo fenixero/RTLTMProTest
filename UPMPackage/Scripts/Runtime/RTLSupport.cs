@@ -22,6 +22,7 @@ namespace RTLTMPro
         ///     Fixes the provided string
         /// </summary>
         /// <param name="input">Text to fix</param>
+        /// <param name="textMeshPro">RTLTextMeshPro for find tags</param>
         /// <param name="output">Fixed text</param>
         /// <param name="fixTextTags"></param>
         /// <param name="preserveNumbers"></param>
@@ -29,7 +30,7 @@ namespace RTLTMPro
         /// <returns>Fixed text</returns>
         public static void FixRTL(
             string input,
-            List<(int,int)> tags,
+            RTLTextMeshPro textMeshPro,
             FastStringBuilder output,
             bool farsi = true,
             bool fixTextTags = true,
@@ -44,11 +45,11 @@ namespace RTLTMPro
             
             TashkeelFixer.FixShaddaCombinations(glyphFixerOutput);
             // Fix flow of the text and put the result in FinalLetters field
-            LigatureFixer.Fix(glyphFixerOutput,tags, output, farsi, fixTextTags, preserveNumbers);
-            if (fixTextTags)
-            {
-                //RichTextFixer.Fix(output);
-            }
+            
+            var tags = new List<(int, int)>();
+            if(textMeshPro!=null) 
+              tags = textMeshPro.FindTags(glyphFixerOutput.ToString());
+            LigatureFixer.Fix(glyphFixerOutput, tags, output, farsi, fixTextTags, preserveNumbers);
             inputBuilder.Clear();
         }
 
