@@ -27,7 +27,7 @@ namespace RTLTMPro {
     /// <summary>
     /// Fixes the flow of the text.
     /// </summary>
-    public static void Fix(FastStringBuilder input, List<(int,int)> tags, FastStringBuilder output, 
+    public static void Fix(FastStringBuilder input, List<(int, int)> tags, FastStringBuilder output,
         bool farsi, bool fixTextTags, bool preserveNumbers) {
       // Some texts like tags and English words need to be displayed in their original order.
       // This list keeps the characters that their order should be reserved
