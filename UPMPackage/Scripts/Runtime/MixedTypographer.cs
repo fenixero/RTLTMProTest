@@ -21,28 +21,27 @@ namespace RTLTMPro {
       }
 
       #endregion
-      
       #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
         if (inputCharactersType[i] != ContextType.Default) 
           continue;
         int ch = input.Get(i);
-        bool isRightToLeft = 
+        bool isRightToLeft =
             // \U0600 to \ u06FF: Arabic basic character set (including Arabic letters and some
             // punctuation marks).
             (ch >= '\u0600' && ch <= '\u06FF') ||
             // \U0750 to \ U077F: Includes Arabic characters from some minority languages
-            // (such as West African Arabic).        
+            // (such as West African Arabic).
             (ch >= '\u0750' && ch <= '\u077F') ||
             // \U08A0 to \ u08FF: Contains extended Arabic characters
             // (such as Arabic diacritical marks).
             (ch >= '\u08A0' && ch <= '\u08FF') ||
             // \UFB50 to \ uFDFF: Arabic glyph variants
-            // (such as connected letters).       
-            (ch >= '\uFB50' && ch <= '\uFDFF') || // U+FB50 - U+FDFF
+            // (such as connected letters).
+            (ch >= '\uFB50' && ch <= '\uFDFF') ||
             // \UFE70 to \ uFEFF: Special marks and variant characters in Arabic.
-            (ch >= '\uFE70' && ch <= '\uFEFF') || // U+FE70 - U+FEFF
+            (ch >= '\uFE70' && ch <= '\uFEFF') ||
             // 0x1EE00 to 0x1EEFF: including variations of Latin letters
             // and some additional Arabic characters.
             (ch >= 0x1EE00 && ch <= 0x1EEFF) ||

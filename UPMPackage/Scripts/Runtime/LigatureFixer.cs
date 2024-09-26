@@ -16,7 +16,7 @@ namespace RTLTMPro {
       }
 
       buffer.Clear();
-    }    
+    }
     private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[j]);
@@ -75,8 +75,7 @@ namespace RTLTMPro {
           }
           FlushBufferToOutputReverse(_ltrTextHolder, output);
           FlushBufferToOutput(_tagTextHolder, output);
-          
-          i = nextI + 1 ;
+          i = nextI + 1;
           continue;
         }
         #endregion
