@@ -75,7 +75,6 @@ namespace RTLTMPro {
           }
           FlushBufferToOutputReverse(_ltrTextHolder, output);
           FlushBufferToOutput(_tagTextHolder, output);
-          
           i = nextI + 1 ;
           continue;
         }
