@@ -234,6 +234,7 @@ namespace RTLTMPro {
       return (inputCharactersType,
         hasRightToLeft ? ContextType.RightToLeft : ContextType.LeftToRight);
     }
+    
     /// <summary>
     /// GetMirroredCharsType use for set context type and return valid mirrored character index 
     /// </summary>
