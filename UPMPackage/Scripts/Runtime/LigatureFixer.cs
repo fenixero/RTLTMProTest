@@ -16,7 +16,7 @@ namespace RTLTMPro {
       }
 
       buffer.Clear();
-    }    
+    }
     private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[j]);
