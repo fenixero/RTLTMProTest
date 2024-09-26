@@ -198,7 +198,7 @@ namespace RTLTMPro {
             continue;
           }
 
-          // If this character is a white space, previous & behind are not LeftToRight same time  
+          // If this character is a white space, previous & behind are not LeftToRight same time
           if (input.Get(i) == _whiteSpace) {
             inputCharactersType[i] = ContextType.RightToLeft;
           }
