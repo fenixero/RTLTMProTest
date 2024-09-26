@@ -24,7 +24,7 @@ namespace RTLTMPro {
       #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
-        if (inputCharactersType[i] != ContextType.Default) 
+        if (inputCharactersType[i] != ContextType.Default)
           continue;
         int ch = input.Get(i);
         bool isRightToLeft =
@@ -198,7 +198,7 @@ namespace RTLTMPro {
             continue;
           }
 
-          // If this character is a white space, previous & behind are not LeftToRight same time  
+          // If this character is a white space, previous & behind are not LeftToRight same time
           if (input.Get(i) == _whiteSpace) {
             inputCharactersType[i] = ContextType.RightToLeft;
           }
@@ -236,7 +236,7 @@ namespace RTLTMPro {
     }
     
     /// <summary>
-    /// GetMirroredCharsType use for set context type and return valid mirrored character index 
+    /// GetMirroredCharsType use for set context type and return valid mirrored character index
     /// </summary>
     /// <param name="input">input string</param>
     /// <param name="index">start mirror character index</param>
