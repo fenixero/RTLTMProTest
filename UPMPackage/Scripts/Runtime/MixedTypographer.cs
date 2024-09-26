@@ -24,7 +24,7 @@ namespace RTLTMPro {
       #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
-        if (inputCharactersType[i] != ContextType.Default) 
+        if (inputCharactersType[i] != ContextType.Default)
           continue;
         int ch = input.Get(i);
         bool isRightToLeft =
