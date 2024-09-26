@@ -236,7 +236,7 @@ namespace RTLTMPro {
     }
     
     /// <summary>
-    /// GetMirroredCharsType use for set context type and return valid mirrored character index 
+    /// GetMirroredCharsType use for set context type and return valid mirrored character index
     /// </summary>
     /// <param name="input">input string</param>
     /// <param name="index">start mirror character index</param>
