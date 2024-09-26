@@ -40,7 +40,7 @@ namespace RTLTMPro {
             // (such as connected letters).
             (ch >= '\uFB50' && ch <= '\uFDFF') || // U+FB50 - U+FDFF
             // \UFE70 to \ uFEFF: Special marks and variant characters in Arabic.
-            (ch >= '\uFE70' && ch <= '\uFEFF') || // U+FE70 - U+FEFF
+            (ch >= '\uFE70' && ch <= '\uFEFF') ||
             // 0x1EE00 to 0x1EEFF: including variations of Latin letters
             // and some additional Arabic characters.
             (ch >= 0x1EE00 && ch <= 0x1EEFF) ||
