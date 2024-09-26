@@ -3,6 +3,7 @@
 namespace RTLTMPro {
   public static class MixedTypographer {
     private const char _whiteSpace = ' ';
+
     public static (ContextType[], ContextType) CharactersTypeDetermination(FastStringBuilder input,
       List<(int, int)> tags, bool fixTextTags) {
       bool hasRightToLeft = false;
@@ -100,7 +101,8 @@ namespace RTLTMPro {
               previousWhiteSpace = true;
             }
 
-            if (inputCharactersType[i - j] != ContextType.Default && inputCharactersType[i - j] != ContextType.Tag) {
+            if (inputCharactersType[i - j] != ContextType.Default &&
+                inputCharactersType[i - j] != ContextType.Tag) {
               previousType = inputCharactersType[i - j];
 
               break;
@@ -114,7 +116,8 @@ namespace RTLTMPro {
               behindWhiteSpace = true;
             }
 
-            if (inputCharactersType[i + j] != ContextType.Default && inputCharactersType[i + j] != ContextType.Tag) {
+            if (inputCharactersType[i + j] != ContextType.Default &&
+                inputCharactersType[i + j] != ContextType.Tag) {
               behindType = inputCharactersType[i + j];
               break;
             }
@@ -229,7 +232,8 @@ namespace RTLTMPro {
 
       #endregion
 
-      return (inputCharactersType, hasRightToLeft ? ContextType.RightToLeft : ContextType.LeftToRight);
+      return (inputCharactersType,
+        hasRightToLeft ? ContextType.RightToLeft : ContextType.LeftToRight);
     }
     /// <summary>
     /// GetMirroredCharsType use for set context type and return valid mirrored character index 
@@ -238,7 +242,8 @@ namespace RTLTMPro {
     /// <param name="index">start mirror character index</param>
     /// <param name="isRtl">array for every character's context type</param>
     /// <returns>mirrored character index</returns>
-    private static int GetMirroredCharsType(FastStringBuilder input,int index,ContextType[] isRtl) {
+    private static int GetMirroredCharsType(FastStringBuilder input, int index, 
+        ContextType[] isRtl) {
       int ch = input.Get(index);
       int mirroredCharacterIndex = index;
       if (!MirroredCharsMaper.MirroredCharsMap.ContainsKey((char)ch)) return mirroredCharacterIndex;
