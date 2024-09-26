@@ -20,7 +20,6 @@ namespace RTLTMPro {
       }
 
       #endregion
-      
       #region Mark RTL character
 
       for (int i = 0; i < input.Length; i++) {
