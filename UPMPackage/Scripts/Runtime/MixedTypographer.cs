@@ -37,7 +37,7 @@ namespace RTLTMPro {
             // (such as Arabic diacritical marks).
             (ch >= '\u08A0' && ch <= '\u08FF') ||
             // \UFB50 to \ uFDFF: Arabic glyph variants
-            // (such as connected letters).       
+            // (such as connected letters).
             (ch >= '\uFB50' && ch <= '\uFDFF') || // U+FB50 - U+FDFF
             // \UFE70 to \ uFEFF: Special marks and variant characters in Arabic.
             (ch >= '\uFE70' && ch <= '\uFEFF') || // U+FE70 - U+FEFF
