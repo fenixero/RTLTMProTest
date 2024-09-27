@@ -106,13 +106,23 @@ namespace RTLTMPro {
             #endregion
             for (int j = 1; j < input.Length - i; j++) {
               if (input.Get(i + j) == ch) {
+                ContextType middleType = ContextType.Default;
                 ContextType pairedPreviousType = ContextType.Default;
                 ContextType pairedBehindType = ContextType.Default;
                 for (int k = 1; k <= j - 1; k++) {
-                  if (inputCharactersType[i + j - k] != ContextType.Default &&
+                  if (pairedPreviousType == ContextType.Default &&
+                      inputCharactersType[i + j - k] != ContextType.Default &&
                       inputCharactersType[i + j - k] != ContextType.Tag) {
                     pairedPreviousType = inputCharactersType[i + j - k];
-                    break;
+                  }
+
+                  if (middleType == ContextType.Default &&
+                      inputCharactersType[i + j - k] == ContextType.LeftToRight) {
+                    middleType = ContextType.LeftToRight;
+                  }
+
+                  if (inputCharactersType[i + j - k] == ContextType.RightToLeft) {
+                    middleType = ContextType.RightToLeft;
                   }
                 }
 
@@ -130,18 +140,28 @@ namespace RTLTMPro {
                 if (pairedPreviousType == ContextType.Default)
                   pairedPreviousType = pairedBehindType;
                 // If all type is default, all text is not letter
-                if (pairedPreviousType == ContextType.Default) {
-                  inputCharactersType[i] = ContextType.RightToLeft;
-                  inputCharactersType[i + j] = ContextType.RightToLeft;
+                if (pairedPreviousType == ContextType.Default &&
+                    previousType == ContextType.Default) {
+                  inputCharactersType[i] = ContextType.LeftToRight;
+                  inputCharactersType[i + j] = ContextType.LeftToRight;
+                }
+                if (pairedPreviousType == ContextType.Default &&
+                    previousType != ContextType.Default) {
+                  inputCharactersType[i] = previousType;
+                  inputCharactersType[i + j] = previousType;
                   break;
                 }
-
-                if (previousType == ContextType.LeftToRight && behindType == 
-                    ContextType.LeftToRight && pairedPreviousType == ContextType.LeftToRight) {
+                if (previousType == ContextType.LeftToRight
+                    && middleType == ContextType.LeftToRight
+                    && behindType == ContextType.LeftToRight
+                    && pairedPreviousType == ContextType.LeftToRight) {
                   inputCharactersType[i] = ContextType.LeftToRight;
                   inputCharactersType[i + j] = ContextType.LeftToRight;
                   break;
                 }
+                inputCharactersType[i] = ContextType.RightToLeft;
+                inputCharactersType[i + j] = ContextType.RightToLeft;
+                break;
               }
             }
           }
@@ -233,7 +253,8 @@ namespace RTLTMPro {
             mirroredCharacterIndex = index + j;
           }
 
-          if (inputCharactersType[index + j] != ContextType.Tag) {
+          if (inputCharactersType.Length - 1 == index + j ||
+              inputCharactersType[index + j] != ContextType.Tag) {
             return mirroredCharacterIndex;
           }
         }
