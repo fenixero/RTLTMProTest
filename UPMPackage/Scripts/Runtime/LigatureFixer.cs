@@ -189,8 +189,10 @@ namespace RTLTMPro {
           continue;
         }
 
+        // If program executing in there, this character is an RTL character
         FlushBufferToOutputReverse(_ltrTextHolder, output);
         FlushBufferToOutputReverse(_ltrOutput, output);
+        FlushBufferToOutput(_endTagTextHolder, output);
 
         if (characterAtThisIndex != 0xFFFF &&
             characterAtThisIndex != (int)SpecialCharacters.ZeroWidthNoJoiner) {
