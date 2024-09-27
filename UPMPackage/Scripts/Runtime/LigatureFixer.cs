@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace RTLTMPro {
@@ -10,7 +11,7 @@ namespace RTLTMPro {
 
     private static readonly HashSet<char>
         _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
-
+    private static int _endTagIndex = 0;
     private static void FlushBufferToOutputReverse(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[buffer.Count - 1 - j]);
@@ -18,11 +19,14 @@ namespace RTLTMPro {
 
       buffer.Clear();
     }
-    private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output) {
+
+    private static void FlushBufferToOutput(List<int> buffer, FastStringBuilder output,
+        bool clear = true) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[j]);
       }
-      buffer.Clear();
+
+      if (clear) buffer.Clear();
     }
 
     /// <summary>
@@ -102,6 +106,11 @@ namespace RTLTMPro {
             _startTagTextHolder.Clear();
             _ltrOutput.AddRange(_ltrTextHolder);
             _ltrTextHolder.Clear();
+            for (int m = 0; m < tags.Count; m++) {
+              var (_, end) = tags[m];
+              if (i == end) _endTagIndex = m;
+            }
+            
           }
 
           i = nextI + 1;
@@ -190,7 +199,13 @@ namespace RTLTMPro {
         }
 
         // If program executing in there, this character is an RTL character
+        if (_endTagTextHolder.Count != 0) {
+          SearchForStartTag(input, tags, i);
+          if (_startTagTextHolder.Count != 0)
+            FlushBufferToOutput(_endTagTextHolder, output, false);
+        }
         FlushBufferToOutputReverse(_ltrTextHolder, output);
+        FlushBufferToOutput(_startTagTextHolder, output);
         FlushBufferToOutputReverse(_ltrOutput, output);
         FlushBufferToOutput(_endTagTextHolder, output);
 
@@ -202,6 +217,32 @@ namespace RTLTMPro {
 
       FlushBufferToOutputReverse(_ltrTextHolder, output);
       FlushBufferToOutputReverse(_ltrOutput, output);
+    }
+
+    private static bool SearchForStartTag(
+        FastStringBuilder input, List<(int, int)> tags, int index) {
+      if (_endTagIndex == 0) return false;
+      var (start, end) = tags[_endTagIndex - 1];
+      var previousTag = new FastStringBuilder(500);
+      input.Substring(previousTag, start, end - start + 1);
+      string previousTagStr = previousTag.ToString();
+      string previousTagType = previousTagStr.Substring(1, previousTagStr.IndexOf('=') - 1);
+      var tagTextCharList = new List<char>();
+      for (int i = 0; i < _endTagTextHolder.Count; i++) {
+        tagTextCharList.Add((char)_endTagTextHolder[i]);
+      }
+      tagTextCharList.Reverse();
+      string endTagStr = new string(tagTextCharList.ToArray());
+      string endTagType = endTagStr.Substring(2, endTagStr.IndexOf('>') - 2);
+      if (previousTagType == endTagType) {
+        _startTagTextHolder.Clear();
+        for (int i = end; i >= start; i--) {
+          _startTagTextHolder.Add(input.Get(i));
+        }
+        return true;
+      }
+      _startTagTextHolder.Clear();
+      return false;
     }
   }
 }
