@@ -122,8 +122,9 @@ namespace RTLTMPro {
         #region process with Punctutaion and Symbol || Mirrored Chars
 
         if (Char32Utils.IsPunctuation(characterAtThisIndex) 
-            || Char32Utils.IsSymbol(characterAtThisIndex) ||
-            characterAtThisIndex == ' ') {
+            || Char32Utils.IsSymbol(characterAtThisIndex)
+            || _mirroredCharsSet.Contains((char)characterAtThisIndex)
+            || characterAtThisIndex == ' ') {
           ContextType characterType = inputCharacterType[i];
           if (_mirroredCharsSet.Contains((char)characterAtThisIndex) 
               && characterType == ContextType.RightToLeft) {
@@ -201,7 +202,8 @@ namespace RTLTMPro {
 
         if (Char32Utils.IsLetter(characterAtThisIndex) && 
             !Char32Utils.IsRTLCharacter(characterAtThisIndex) ||
-            Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi)) {
+            Char32Utils.IsNumber(characterAtThisIndex, preserveNumbers, farsi ||
+            inputCharacterType[i] == ContextType.LeftToRight)) {
           _ltrTextHolder.Add(characterAtThisIndex);
           continue;
         }
