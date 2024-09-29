@@ -136,8 +136,16 @@ namespace RTLTMPro {
           // fixed: refer to inputCharacterType to process Character
 
           if (characterType == ContextType.RightToLeft) {
+            // If program executing in there, this character is an RTL character
+            if (_endTagTextHolder.Count != 0) {
+              SearchForStartTag(input, tags, i);
+              if (_startTagTextHolder.Count != 0)
+                FlushBufferToOutput(_endTagTextHolder, output, false);
+            }
             FlushBufferToOutputReverse(_ltrTextHolder, output);
+            FlushBufferToOutput(_startTagTextHolder, output);
             FlushBufferToOutputReverse(_ltrOutput, output);
+            FlushBufferToOutput(_endTagTextHolder, output);
             output.Append(characterAtThisIndex);
             continue;
           }
@@ -151,8 +159,16 @@ namespace RTLTMPro {
             Debug.LogError($"Error Character Type Process,index:{i},Text:{input}," +
                            $"Text char array:{input.ToString().ToCharArray()}");
             if (inputType == ContextType.RightToLeft) {
+              // If program executing in there, this character is an RTL character
+              if (_endTagTextHolder.Count != 0) {
+                SearchForStartTag(input, tags, i);
+                if (_startTagTextHolder.Count != 0)
+                  FlushBufferToOutput(_endTagTextHolder, output, false);
+              }
               FlushBufferToOutputReverse(_ltrTextHolder, output);
+              FlushBufferToOutput(_startTagTextHolder, output);
               FlushBufferToOutputReverse(_ltrOutput, output);
+              FlushBufferToOutput(_endTagTextHolder, output);
               output.Append(characterAtThisIndex);
               continue;
             } else {
