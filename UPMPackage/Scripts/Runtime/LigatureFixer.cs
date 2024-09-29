@@ -126,17 +126,13 @@ namespace RTLTMPro {
             || _mirroredCharsSet.Contains((char)characterAtThisIndex)
             || characterAtThisIndex == ' ') {
           ContextType characterType = inputCharacterType[i];
-          if (_mirroredCharsSet.Contains((char)characterAtThisIndex) 
-              && characterType == ContextType.RightToLeft) {
-            characterAtThisIndex = MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
-            FlushBufferToOutputReverse(_ltrTextHolder, output);
-            FlushBufferToOutputReverse(_ltrOutput, output);
-            output.Append(characterAtThisIndex);
-            continue;
-          }
           // fixed: refer to inputCharacterType to process Character
 
           if (characterType == ContextType.RightToLeft) {
+            if (_mirroredCharsSet.Contains((char)characterAtThisIndex)) {
+              characterAtThisIndex =
+                MirroredCharsMaper.MirroredCharsMap[(char)characterAtThisIndex];
+            }
             // If program executing in there, this character is an RTL character
             if (_endTagTextHolder.Count != 0) {
               SearchForStartTag(input, tags, i);
