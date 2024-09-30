@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace RTLTMPro {
 
     private static readonly HashSet<char>
         _mirroredCharsSet = new HashSet<char>(MirroredCharsMaper.MirroredCharsMap.Keys);
-    private static int _endTagIndex = 0;
+    private static int _endTagIndex;
     private static void FlushBufferToOutputReverse(List<int> buffer, FastStringBuilder output) {
       for (int j = 0; j < buffer.Count; j++) {
         output.Append(buffer[buffer.Count - 1 - j]);
@@ -87,6 +88,10 @@ namespace RTLTMPro {
             if (i == input.Length - 1 || inputCharacterType[i + 1] == ContextType.RightToLeft) {
               FlushBufferToOutput(_startTagTextHolder, output);
             } else {
+              if (_endTagTextHolder.Count == 0) {
+                GenerateEndTag();
+                FlushBufferToOutput(_startTagTextHolder, output, false);
+              }
               _startTagTextHolder.Reverse();
               _ltrOutput.AddRange(_startTagTextHolder);
               _startTagTextHolder.Clear();
@@ -135,8 +140,7 @@ namespace RTLTMPro {
             }
             // If program executing in there, this character is an RTL character
             if (_endTagTextHolder.Count != 0) {
-              SearchForStartTag(input, tags, i);
-              if (_startTagTextHolder.Count != 0)
+              if (SearchForStartTag(input, tags))
                 FlushBufferToOutput(_endTagTextHolder, output, false);
             }
             FlushBufferToOutputReverse(_ltrTextHolder, output);
@@ -158,8 +162,7 @@ namespace RTLTMPro {
             if (inputType == ContextType.RightToLeft) {
               // If program executing in there, this character is an RTL character
               if (_endTagTextHolder.Count != 0) {
-                SearchForStartTag(input, tags, i);
-                if (_startTagTextHolder.Count != 0)
+                if (SearchForStartTag(input, tags))
                   FlushBufferToOutput(_endTagTextHolder, output, false);
               }
               FlushBufferToOutputReverse(_ltrTextHolder, output);
@@ -214,8 +217,7 @@ namespace RTLTMPro {
 
         // If program executing in there, this character is an RTL character
         if (_endTagTextHolder.Count != 0) {
-          SearchForStartTag(input, tags, i);
-          if (_startTagTextHolder.Count != 0)
+          if (SearchForStartTag(input, tags))
             FlushBufferToOutput(_endTagTextHolder, output, false);
         }
         FlushBufferToOutputReverse(_ltrTextHolder, output);
@@ -234,29 +236,70 @@ namespace RTLTMPro {
     }
 
     private static bool SearchForStartTag(
-        FastStringBuilder input, List<(int, int)> tags, int index) {
+      FastStringBuilder input, List<(int, int)> tags) {
       if (_endTagIndex == 0) return false;
-      var (start, end) = tags[_endTagIndex - 1];
-      var previousTag = new FastStringBuilder(500);
-      input.Substring(previousTag, start, end - start + 1);
-      string previousTagStr = previousTag.ToString();
-      string previousTagType = previousTagStr.Substring(1, previousTagStr.IndexOf('=') - 1);
-      var tagTextCharList = new List<char>();
-      for (int i = 0; i < _endTagTextHolder.Count; i++) {
-        tagTextCharList.Add((char)_endTagTextHolder[i]);
-      }
-      tagTextCharList.Reverse();
-      string endTagStr = new string(tagTextCharList.ToArray());
-      string endTagType = endTagStr.Substring(2, endTagStr.IndexOf('>') - 2);
-      if (previousTagType == endTagType) {
-        _startTagTextHolder.Clear();
-        for (int i = end; i >= start; i--) {
-          _startTagTextHolder.Add(input.Get(i));
+      for (int m = 1; m < _endTagIndex; m++) {
+        var (start, end) = tags[_endTagIndex - m];
+        var previousTag = new FastStringBuilder(500);
+        input.Substring(previousTag, start, end - start + 1);
+        string previousTagStr = previousTag.ToString();
+        string previousTagType = previousTagStr.Substring(1, previousTagStr.IndexOf('=') - 1);
+        var endTagHolderReverse = new char[_endTagTextHolder.Count];
+        for (int i = 0; i < _endTagTextHolder.Count; i++) {
+          endTagHolderReverse[_endTagTextHolder.Count - i - 1] = (char)_endTagTextHolder[i];
         }
-        return true;
+
+        string endTagStr = new string(endTagHolderReverse.ToArray());
+        string endTagType = endTagStr.Substring(2, endTagStr.IndexOf('>') - 2);
+        if (previousTagType == endTagType) {
+          _startTagTextHolder.Clear();
+          for (int i = end; i >= start; i--) {
+            _startTagTextHolder.Add(input.Get(i));
+          }
+
+          return true;
+        }
       }
+
       _startTagTextHolder.Clear();
       return false;
+    }
+
+    private static void GenerateEndTag() {
+      if (_endTagTextHolder.Count > 0) return;
+      int endIndex;
+      int indexTagMiddle = _startTagTextHolder.IndexOf('=');
+      int indexTagEnd = _startTagTextHolder.IndexOf('>');
+      if (indexTagMiddle != -1 || indexTagEnd < indexTagMiddle) {
+        endIndex = indexTagMiddle;
+      } else {
+        endIndex = indexTagEnd;
+      }
+
+      if (endIndex == -1) return;
+      int typeStrLength = _startTagTextHolder.Count - endIndex - 2;
+      char[] typeStrChars = new char[typeStrLength];
+      for (int i = 0; i < typeStrLength; i++) {
+        typeStrChars[i] = (char)_startTagTextHolder[_startTagTextHolder.Count - 2 - i];
+      }
+
+      string typeStr = new string(typeStrChars);
+      if (ValidTagMaper.ValidTagSet.Contains(typeStr)) {
+        if (typeStr == "alpha") {
+          int[] temp = Array.ConvertAll<char, int>("<alpha=#FF>".Reverse().ToArray(), c => c);
+          _endTagTextHolder.AddRange(temp);
+        } else if (typeStr == "size") {
+          int[] temp = Array.ConvertAll<char, int>("<size=100%>".Reverse().ToArray(), c => c);
+          _endTagTextHolder.AddRange(temp);
+        } else if (typeStr == "pos" || typeStr == "space" || typeStr == "sprite") {
+          _endTagTextHolder.AddRange(_startTagTextHolder);
+          _startTagTextHolder.Clear();
+        } else {
+          string endTagStr = "</" + typeStr + ">";
+          int[] temp = Array.ConvertAll<char, int>(endTagStr.Reverse().ToArray(), c => c);
+          _endTagTextHolder.AddRange(temp);
+        }
+      }
     }
   }
 }
