@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace RTLTMPro {
-  public class ValidTagMaper {
+  public class ValidTagMapper {
     public static readonly HashSet<string> ValidTagSet = new () {
       "align",
       "allcaps",

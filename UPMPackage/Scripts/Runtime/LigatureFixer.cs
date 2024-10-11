@@ -284,7 +284,7 @@ namespace RTLTMPro {
       }
 
       string typeStr = new string(typeStrChars);
-      if (ValidTagMaper.ValidTagSet.Contains(typeStr)) {
+      if (ValidTagMapper.ValidTagSet.Contains(typeStr)) {
         if (typeStr == "alpha") {
           int[] temp = Array.ConvertAll<char, int>("<alpha=#FF>".Reverse().ToArray(), c => c);
           _endTagTextHolder.AddRange(temp);
