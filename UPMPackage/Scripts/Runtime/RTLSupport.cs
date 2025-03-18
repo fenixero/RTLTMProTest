@@ -2,6 +2,8 @@
 // ReSharper disable CommentTypo
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using TMPro;
 
 namespace RTLTMPro
 {
@@ -11,6 +13,7 @@ namespace RTLTMPro
 
         private static FastStringBuilder inputBuilder;
         private static FastStringBuilder glyphFixerOutput;
+        private static Dictionary<RTLTextMeshPro, int[]> _rtlCharacterReDirections = new();
 
         static RTLSupport()
         {
@@ -36,22 +39,30 @@ namespace RTLTMPro
             bool fixTextTags = true,
             bool preserveNumbers = false)
         {
+            int[] reDirection = new int[input.Length];
+            for (int i = 0; i < input.Length; i++) {
+              reDirection[i] = i;
+            }
             inputBuilder.SetValue(input);
-            TashkeelFixer.RemoveTashkeel(inputBuilder);
+            TashkeelFixer.RemoveTashkeel(inputBuilder, reDirection);
             // The shape of the letters in shapeFixedLetters is fixed according to their position in word. But the flow of the text is not fixed.
-            GlyphFixer.Fix(inputBuilder, glyphFixerOutput, preserveNumbers, farsi, fixTextTags);
+            GlyphFixer.Fix(inputBuilder, glyphFixerOutput, reDirection, preserveNumbers, farsi, fixTextTags);
             //Restore tashkeel to their places.
-            TashkeelFixer.RestoreTashkeel(glyphFixerOutput);
-            
-            TashkeelFixer.FixShaddaCombinations(glyphFixerOutput);
+            TashkeelFixer.RestoreTashkeel(glyphFixerOutput, reDirection);
+
+            TashkeelFixer.FixShaddaCombinations(glyphFixerOutput, reDirection);
             // Fix flow of the text and put the result in FinalLetters field
-            
+
             var tags = new List<(int, int)>();
-            if(textMeshPro!=null) 
+            if (textMeshPro != null)
               tags = textMeshPro.FindTags(glyphFixerOutput.ToString());
-            LigatureFixer.Fix(glyphFixerOutput, tags, output, farsi, fixTextTags, preserveNumbers);
+            LigatureFixer.Fix(glyphFixerOutput, reDirection, tags, output, farsi, fixTextTags, preserveNumbers);
             inputBuilder.Clear();
+            _rtlCharacterReDirections[textMeshPro] = reDirection;
         }
 
+        public static int[] GetReDirection(RTLTextMeshPro text) {
+          return _rtlCharacterReDirections.GetValueOrDefault(text);
+        }
     }
 }

@@ -75,7 +75,7 @@ namespace RTLTMPro
         /// <summary>
         ///     Removes tashkeel from text.
         /// </summary>
-        public static void RemoveTashkeel(FastStringBuilder input)
+        public static void RemoveTashkeel(FastStringBuilder input, int[] reDirection)
         {
             TashkeelLocations.Clear();
             int j = 0; // write index
@@ -98,7 +98,7 @@ namespace RTLTMPro
         /// <summary>
         ///     Restores removed tashkeel.
         /// </summary>
-        public static void RestoreTashkeel(FastStringBuilder letters)
+        public static void RestoreTashkeel(FastStringBuilder letters, int[] reDirection)
         {
             foreach (TashkeelLocation location in TashkeelLocations)
             {
@@ -109,7 +109,7 @@ namespace RTLTMPro
         /// <summary>
         /// Replace Shadda + Another Tashkeel with combined form 
         /// </summary>
-        public static void FixShaddaCombinations(FastStringBuilder input)
+        public static void FixShaddaCombinations(FastStringBuilder input, int[] reDirection)
         {
             /*
              * Fix of https://github.com/mnarimani/RTLTMPro/issues/13
