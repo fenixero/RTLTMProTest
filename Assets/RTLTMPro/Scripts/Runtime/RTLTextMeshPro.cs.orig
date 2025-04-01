@@ -1,10 +1,10 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 
 namespace RTLTMPro
 {
     [ExecuteInEditMode]
-    public class RTLTextMeshPro3D : TextMeshPro
+    public class RTLTextMeshPro : TextMeshProUGUI
     {
         // ReSharper disable once InconsistentNaming
 #if TMP_VERSION_2_1_0_OR_NEWER
@@ -24,6 +24,8 @@ namespace RTLTMPro
                 UpdateText();
             }
         }
+
+        public string rtlText;
 
         public string OriginalText
         {
@@ -69,18 +71,21 @@ namespace RTLTMPro
             }
         }
 
-        protected bool ForceFix
+        public bool ForceFix
         {
             get { return forceFix; }
             set
             {
                 if (forceFix == value)
                     return;
+                
 
                 forceFix = value;
                 havePropertiesChanged = true;
             }
         }
+
+        [SerializeField] protected bool enalbeRTL = true;
 
         [SerializeField] protected bool preserveNumbers;
 
@@ -95,7 +100,6 @@ namespace RTLTMPro
         protected readonly FastStringBuilder finalText = new FastStringBuilder(RTLSupport.DefaultBufferSize);
         protected FastStringBuilder original_untaged = new FastStringBuilder(RTLSupport.DefaultBufferSize);
         protected FastStringBuilder original_untaged_fixed = new FastStringBuilder(RTLSupport.DefaultBufferSize);
-
 
         protected override void OnEnable()
         {
@@ -115,14 +119,18 @@ namespace RTLTMPro
         {
             if (originalText == null)
                 originalText = "";
-
-            if (ForceFix == false && TextUtils.IsRTLInput(originalText) == false)
+            
+            if (!enalbeRTL || (ForceFix == false && TextUtils.IsRTLInput(originalText) == false))
             {
-                isRightToLeftText = false;
+                rtlText = string.Empty;
                 base.text = originalText;
             }
             else
             {
+<<<<<<< HEAD
+                rtlText = GetFixedText(originalText);
+                base.text = rtlText;
+=======
                 // Get The Untaged version of the text
                 original_untaged.Clear();
                 RichTextFixer.GetUntaged(originalText, original_untaged);
@@ -132,6 +140,7 @@ namespace RTLTMPro
 
                 isRightToLeftText = true;
                 base.text = GetFixedText(originalText);
+>>>>>>> origin/Fix-RTL-Textrich-Taging
             }
 
             havePropertiesChanged = true;
@@ -154,11 +163,14 @@ namespace RTLTMPro
                 return input;
 
             finalText.Clear();
+<<<<<<< HEAD
+            RTLSupport.FixRTL(input, finalText, farsi, fixTags, preserveNumbers);
+=======
             // RTLSupport.FixRTL(input, finalText, farsi, fixTags, preserveNumbers);
             // RTLFix with the untaged version for converting the taged text.
             RTLSupport.FixRTL(input, finalText, original_untaged_fixed, farsi, fixTags, preserveNumbers);
             finalText.Reverse();
-
+>>>>>>> origin/Fix-RTL-Textrich-Taging
             return finalText.ToString();
         }
     }
